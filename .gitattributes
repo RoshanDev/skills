@@ -1,0 +1,31 @@
+# Auto detect text files and perform LF normalization
+*          text=auto
+
+# Source code
+*.sh       text eol=lf
+*.ps1      text eol=crlf
+*.py       text eol=lf
+*.js       text eol=lf
+*.ts       text eol=lf
+
+# Markdown / documentation
+*.md       text eol=lf
+*.txt      text eol=lf
+LICENSE    text eol=lf
+
+# Config files
+*.json     text eol=lf
+*.yaml     text eol=lf
+*.yml      text eol=lf
+*.toml     text eol=lf
+.gitignore text eol=lf
+
+# Binary files (no normalization)
+*.png      binary
+*.jpg      binary
+*.jpeg     binary
+*.gif      binary
+*.ico      binary
+*.pdf      binary
+*.zip      binary
+*.gz       binary
