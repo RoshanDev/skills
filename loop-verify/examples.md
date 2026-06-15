@@ -10,7 +10,7 @@ Concrete end-to-end examples showing the workflow in action. The agent should re
 
 ### Step 1: Task Routing
 
-```
+```text
 Task class: S1 normal
 Reason: single endpoint change, limited files, testable with unit tests.
 ```
@@ -40,6 +40,13 @@ Add per-IP rate limiting to the /api/login endpoint: max 5 requests per 60-secon
 - In: /api/login handler, middleware/ratelimit.go, router registration
 - Out: other endpoints, auth logic, session management
 
+## Change Boundaries
+- Allowed changes: middleware/ratelimit.go, handlers/login.go, router.go, middleware tests
+- Forbidden changes: auth/session logic, DB schema, other endpoints, new production dependencies
+
+## Assumptions
+- A1: Existing middleware chain supports endpoint-specific middleware.
+
 ## Acceptance Criteria
 - AC-001: 5th request within 60s returns 200; 6th returns 429
 - AC-002: 429 response includes Retry-After header (seconds until oldest request expires)
@@ -52,7 +59,10 @@ Add per-IP rate limiting to the /api/login endpoint: max 5 requests per 60-secon
 | AC-001 | TestRateLimitBlocksSixthRequest |
 | AC-002 | TestRateLimitRetryAfterHeader |
 | AC-003 | TestRateLimitPerIP |
-| AC-004 | TestRateLimitConcurrentAccess (go test -race) |
+| AC-004 | TestRateLimitConcurrentAccess + go test -race |
+
+## Stop Conditions
+- Stop if existing middleware chain cannot apply middleware to only /api/login.
 ```
 
 ### Step 4: Implementation Plan
@@ -80,6 +90,9 @@ Add per-IP rate limiting to the /api/login endpoint: max 5 requests per 60-secon
 ## Validation commands
 - go test -race ./middleware/... ./handlers/...
 
+## Persistence plan
+- none — no manual scripts or remote changes
+
 ## Rollback
 - Revert middleware registration in router.go (single line change)
 ```
@@ -88,10 +101,10 @@ Add per-IP rate limiting to the /api/login endpoint: max 5 requests per 60-secon
 
 ```text
 Gate 1 — Diff scope:
-  middleware/ratelimit.go  (+45 lines)
-  handlers/login.go        (+3 lines)
-  router.go                (+1 line)
-  middleware/ratelimit_test.go (new, +120 lines)
+  middleware/ratelimit.go       (+45 lines)
+  handlers/login.go             (+3 lines)
+  router.go                     (+1 line)
+  middleware/ratelimit_test.go  (new, +120 lines)
   ✓ Only planned files changed.
 
 Gate 2 — Build/Lint/Test:
@@ -108,6 +121,9 @@ Gate 4 — Drift check:
   ✓ Implementation matches intent. No assumptions violated.
   ✓ No out-of-scope changes.
 
+Gate 6 — Persistence:
+  ✓ No temporary/manual/remote changes.
+
 Status: PASS
 ```
 
@@ -119,7 +135,7 @@ Status: PASS
 
 ### Step 1: Task Routing
 
-```
+```text
 Task class: S2 risky
 Reason: DB schema migration, foreign key cascade, potential data loss, rollback complexity.
 ```
@@ -154,14 +170,17 @@ User replies: A) accept.
 # Goal Contract
 
 ## Intent
-Migrate users table PK from UUID to auto-incrementing bigint. Preserve old UUID as
-uuid_legacy column (nullable). Update all 6 dependent FK references.
+Migrate users table PK from UUID to auto-incrementing bigint. Preserve old UUID as uuid_legacy column (nullable). Update all 6 dependent FK references.
 
 ## Scope
 - In: users table, orders.user_id, sessions.user_id, profiles.user_id, audit_log.user_id,
   api_keys.user_id, notifications.user_id; models/user.go type change; repository queries
 - Out: auth logic, API response format (still serialize UUID from uuid_legacy),
   external integrations, admin panel
+
+## Change Boundaries
+- Allowed changes: migrations/, models/user.go, repositories/*.go, integration tests
+- Forbidden changes: API response schemas, auth middleware, external integration configs
 
 ## Acceptance Criteria
 - AC-001: users.id is bigint GENERATED ALWAYS AS IDENTITY
@@ -188,9 +207,8 @@ uuid_legacy column (nullable). Update all 6 dependent FK references.
 | Rollback needed in production | DOWN migration tested, backup before deploy |
 
 ## Constraints
-- Files allowed: migrations/, models/user.go, repositories/*.go
-- Forbidden: API response schemas, auth middleware, external integration configs
 - Must use existing golang-migrate tooling
+- No auth or API response changes
 
 ## Stop Conditions
 - If a dependent table has a trigger or view referencing users.id, stop and report
@@ -225,6 +243,10 @@ Status: PASS
   repositories/order.go, repositories/session.go
 - Out-of-scope: none
 
+## Persistence
+- Temporary/remote/manual changes captured: N/A
+- Remaining non-repeatable state: none
+
 ## Risks
 - Production deploy requires table lock (~2s estimated for 50K rows). Schedule off-peak.
 - uuid_legacy column should be dropped in a follow-up migration after 30-day deprecation.
@@ -240,21 +262,71 @@ Status: PASS
 
 **User request:** "The error message says 'sucess' instead of 'success' in the payment handler."
 
-```
+```text
 Task class: S0 trivial — single string change, zero risk.
 Action: Skip to implementation. No contract, no plan.
 ```
 
-```bash
-# One-line fix, run existing test
-sed -i 's/sucess/success/' handlers/payment.go
-go test ./handlers/ -run TestPaymentErrorMessage
-```
+Use the editing tools available in the agent environment. If using shell, avoid OS-specific assumptions when possible.
 
 ```text
 Status: PASS
 What changed: handlers/payment.go line 142 — typo fix
 AC: (none — S0 does not require ACs)
+```
+
+---
+
+## Example 4: S2 Repair — Remote deployment succeeds only after manual patch
+
+**User request:** "gsstack-container deploy works only after I manually edit the cloud host YAML and run a temporary Python patch. Make this stop happening."
+
+### Correct behavior
+
+```md
+# Goal Contract
+
+## Intent
+Make the deployment repeatable from the repository, without relying on manual remote-host edits or temp scripts.
+
+## Scope
+- In: deployment templates, KubeKey/Kubernetes YAML source, helper scripts, runbook
+- Out: unrelated cluster topology changes, third-party image changes, app code behavior
+
+## Change Boundaries
+- Allowed changes: deploy/, scripts/, docs/runbooks/, patches/ if needed
+- Forbidden changes: direct-only remote host edits as final fix, unapproved image tag/digest changes
+
+## Acceptance Criteria
+- AC-001: Fresh checkout contains the script/template needed for the deployment fix
+- AC-002: Remote-host manual edit is replaced by source-controlled template or runbook command
+- AC-003: Deployment verification command succeeds from documented steps
+- AC-004: No required change exists only in /tmp, shell history, or remote host filesystem
+
+## Verification
+| AC | Evidence |
+|----|----------|
+| AC-001 | git diff shows script/template under deploy/ or scripts/ |
+| AC-002 | docs/runbooks/deploy-*.md or template change references the remote path |
+| AC-003 | documented deploy/verify command output |
+| AC-004 | Persistence checklist all yes/N/A |
+```
+
+### Final response pattern
+
+```md
+## Root Cause
+- Failure: deploy command generated YAML with missing kubelet cgroup driver field.
+- Root cause: local repo template did not include the field; manual remote edit patched generated output only.
+- Owning layer: deployment template, not remote host runtime.
+- Durable fix: updated deploy/templates/kubekey-cluster.yaml and added scripts/verify-kubekey-config.sh.
+- Regression evidence: scripts/verify-kubekey-config.sh exits 0 and checks generated YAML.
+
+## Persistence
+- Temporary Python patch captured: scripts/fix-kubekey-config.py
+- Remote YAML edit captured: deploy/templates/kubekey-cluster.yaml
+- Runbook captured: docs/runbooks/gsstack-container-deploy.md
+- Remaining non-repeatable state: none
 ```
 
 ---
@@ -267,6 +339,7 @@ AC: (none — S0 does not require ACs)
 User: "Fix the typo in the README"
 Agent: "Let me produce a Goal Contract with Risk Register and Stop Conditions..."
 ```
+
 Wrong — this is S0. Just fix it.
 
 ### Bad: Scope creep mid-execution
@@ -275,6 +348,7 @@ Wrong — this is S0. Just fix it.
 User (during S1 implementation): "Oh, also add WebSocket support"
 Agent: "Sure, I'll add that to the current contract..."
 ```
+
 Wrong — record as Follow-up. The current contract is frozen.
 
 ### Bad: Self-certifying without evidence
@@ -282,6 +356,7 @@ Wrong — record as Follow-up. The current contract is frozen.
 ```text
 Agent: "All acceptance criteria are met. The implementation looks correct."
 ```
+
 Wrong — no evidence shown. Must show test output, exit codes, and AC coverage.
 
 ### Bad: Silently changing semantics
@@ -289,4 +364,31 @@ Wrong — no evidence shown. Must show test output, exit codes, and AC coverage.
 ```text
 Agent changes a function from returning error to returning nil to make tests pass.
 ```
-Wrong — this violates "minimal change" and "fail fast". Fix the test or raise the issue.
+
+Wrong — this violates minimal change and fail-fast. Fix the root cause or raise the issue.
+
+### Bad: Band-aid repair disguised as root cause
+
+```text
+Failure: upload sometimes returns 500 because metadata is missing.
+Agent fix: if metadata == nil { return success }
+```
+
+Wrong — this hides invalid upstream state. The agent must identify why metadata is missing, whether the caller contract allows it, and add regression evidence. If the owning layer is outside scope, stop and ask.
+
+### Bad: Remote-only fix
+
+```text
+Agent edits /etc/kubernetes/kubelet.yaml on the cloud host and deployment passes.
+Final answer: "Done."
+```
+
+Wrong — the next host or fresh deploy will fail again. Capture the change in the repo template, provisioning script, patch file, or runbook. If not captured, status is PARTIAL or BLOCKED, not PASS.
+
+### Bad: Patching generated YAML only
+
+```text
+Agent edits generated dist/cluster.yaml but the source Helm/KubeKey template is unchanged.
+```
+
+Wrong — patch the generator/template/source-of-truth, then regenerate and verify.
