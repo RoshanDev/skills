@@ -1,20 +1,21 @@
 ---
 name: loop-verify
-description: Use this skill for coding tasks that need clarified intent, scope control, acceptance-criteria mapping, root-cause repair, persistence of manual/remote changes, verification loops, and anti-overengineering review. Trigger for feature work, bug fixes, refactors, backend logic, Docker/build/deployment changes, public API changes, multi-file changes, or any task where correctness or repeatability matters. Do not use for pure Q&A or obvious one-line S0 edits unless asked.
+description: Use this skill for coding tasks that need clarified intent, scope control, acceptance-criteria mapping, outcome rubrics, root-cause repair, persistence of manual/remote changes, verification loops, and anti-overengineering review. Trigger for feature work, bug fixes, refactors, backend logic, Docker/build/deployment changes, public API changes, multi-file changes, or any task where correctness or repeatability matters. Do not use for pure Q&A or obvious one-line S0 edits unless asked.
 ---
 
 # Loop Verify
 
-Lightweight loop-engineering workflow. Preserve intent, reduce scope drift, implement minimally, fix root causes instead of symptoms, persist repeatable changes, and prove the result with executable evidence.
+Lightweight loop-engineering workflow. Preserve intent, reduce scope drift, implement minimally, fix root causes instead of symptoms, persist repeatable changes, and prove the result with outcome evidence.
 
-**Quick start:** For concrete end-to-end examples (S0/S1/S2 walkthroughs and anti-patterns), see [examples.md](examples.md). For detailed gate checklists, reviewer prompt, error recovery, root-cause analysis, persistence checks, and decision tree, see [reference.md](reference.md).
+**Quick start:** For examples, see [examples.md](examples.md). For detailed gate checklists, root-cause repair, persistence checks, and reviewer prompt, see [reference.md](reference.md). For outcome/rubric style autonomous loops, see [outcomes.md](outcomes.md).
 
 ## Core Philosophy
 
+- **Outcome first.** A task is not just a chat. Define what done looks like and how quality will be measured before autonomous work begins.
 - **Code is actual system state, not automatic correctness.** The Goal Contract captures intent; acceptance criteria define what must be true; tests and checks are executable evidence. PASS requires evidence mapped to ACs, not just "tests look green".
 - **Spec is contract/scaffolding, not a permanent source of truth by default.** Use it to lock important decisions before coding. Persist only reusable invariants, decisions, or pitfalls.
 - **Root cause over band-aids.** A fix that only hides a symptom is incomplete. Reproduce the failure, identify the ownership layer, add durable correction, and verify with a regression check.
-- **Repeatability over local heroics.** Temporary scripts, remote-host edits, patch files, YAML/Python changes, and deployment tweaks must be captured in the local repo or declared as non-repeatable risk.
+- **Repeatability over local heroics.** Temporary scripts, remote-host edits, patch files, YAML/Python changes, deployment tweaks, and copied bundle edits must be captured in the local repo or declared as non-repeatable risk.
 - **Source truth over patch stacks.** If the source is available during active development, edit the source, template, generator, Helm chart, or offline package input directly. Patch archives and overlay scripts are for explicit released-version hotfixes, not default development work.
 - **More context, less control.** Give rich context (repo structure, existing code, constraints, prior decisions) instead of rigid multi-tool chains.
 - **One strong workflow, not stitched tools.** Prefer fewer contexts, fewer subagents, smaller diffs, and stronger gates.
@@ -27,6 +28,7 @@ Progressive disclosure is allowed, but do not skip critical references:
 
 - For S0/S1: read `reference.md` only if a gate fails, the task is unclear, or review/repair is requested.
 - For S2/S3, Docker/platform, deployment, remote-host, data, security, or `repair` tasks: read the relevant `reference.md` sections before final verification.
+- For autonomous loops, `execute`, `repair`, `review`, `persist`, or any task where "done" is ambiguous: read [outcomes.md](outcomes.md) and use an Outcome Snapshot.
 - Read `examples.md` only when unsure how to fill a template or when the user asks for examples.
 
 ## Workflow Decision Tree
@@ -38,9 +40,10 @@ User request arrives
 ├─ After recon, important choices open?
 │  ├─ YES → Grill (one question at a time, with recommended answer)
 │  └─ NO → Draft Goal Contract
+├─ S1+? → Define Outcome Snapshot / rubric from the contract
 ├─ Contract approved? → Plan → Implement in slices → Verify (Gates 0-7)
-├─ S2/S3 or high risk? → Fresh Review (Gate 7)
-├─ Gates pass? → Final Response (PASS/PARTIAL/BLOCKED/FAILED)
+├─ S2/S3 or high risk? → Fresh Review / outcome evaluation (Gate 7)
+├─ Rubric satisfied? → Final Response (PASS/PARTIAL/BLOCKED/FAILED)
 └─ New requirement mid-run? → Record as Follow-up unless user explicitly reopens scope
 ```
 
@@ -51,11 +54,11 @@ Before doing anything, classify the task and pick the lightest adequate process.
 | Level | Description | Process |
 |-------|-------------|---------|
 | **S0** trivial | One-file, low-risk edit: typo, copy, small config, simple rename | Skip to implementation. No contract needed. |
-| **S1** normal | Feature/fix with tests, limited files, low blast radius | Lightweight Goal Contract: intent + scope + boundaries + ACs + verification. Implement and verify. |
-| **S2** risky | Auth, payment, data migration, concurrency, security, public API, Docker/build/deploy, remote host changes, third-party image/platform, multi-service behavior | Full Goal Contract + risk list + explicit test plan + verification loop. |
-| **S3** architectural | Changes boundaries, contracts, storage model, service topology, or major subsystem behavior | Design review before implementation. Split into multiple S1/S2 slices — never one big pass. |
+| **S1** normal | Feature/fix with tests, limited files, low blast radius | Lightweight Goal Contract + Outcome Snapshot. Implement and verify. |
+| **S2** risky | Auth, payment, data migration, concurrency, security, public API, Docker/build/deploy, remote host changes, third-party image/platform, multi-service behavior | Full Goal Contract + risk list + outcome rubric + verification loop. |
+| **S3** architectural | Changes boundaries, contracts, storage model, service topology, or major subsystem behavior | Design review before implementation. Split into chained S1/S2 outcomes — never one big pass. |
 
-**Routing principle:** Most daily tasks should stay S0/S1. Forcing heavy process on them is net-negative ROI. When in doubt and the downside risk is low, go lighter. If the task touches data, security, deploy, Docker/platform, public API, remote hosts, or multi-service behavior, escalate to S2+.
+**Routing principle:** Most daily tasks should stay S0/S1. Forcing heavy process on them is net-negative ROI. If the task touches data, security, deploy, Docker/platform, public API, remote hosts, or multi-service behavior, escalate to S2+.
 
 ## Phase 0: Recon (Read-Only)
 
@@ -97,8 +100,6 @@ Impact: [what changes depending on the answer]
 Reply: A) accept  B) different option  C) defer/out of scope
 ```
 
-For a question bank organized by category, see [reference.md](reference.md).
-
 ### 2. Freeze Scope
 
 Once a Goal Contract is approved: no new requirements mid-run. Record new requests as Follow-ups. Only reopen if the user explicitly changes scope. If a new requirement conflicts with already-implemented work, stop and report.
@@ -115,7 +116,30 @@ Always prefer the smallest correct change. Do not:
 
 If a larger change is necessary, stop and explain why.
 
-### 4. Root-Cause Repair
+### 4. Outcome / Rubric Discipline
+
+For S1+ tasks, define an Outcome Snapshot before implementation. It is the compact grading target for the loop.
+
+```md
+# Outcome Snapshot
+
+## Description
+[what artifact or system state should exist when done]
+
+## Rubric
+- R-001 / AC-001: [observable criterion and required evidence]
+- R-002 / AC-002: [observable criterion and required evidence]
+- R-RC: For repair tasks, root cause is identified, owning layer fixed, and regression evidence exists.
+- R-PERSIST: Temporary/manual/remote/deployment changes are repo-tracked or documented as one-off risk.
+- R-SCOPE: Diff stays within approved boundaries.
+
+## Max iterations
+3 unless the user chooses another limit.
+```
+
+One outcome at a time. Split large work into chained outcomes. If the rubric contradicts the task, stop and ask instead of coding.
+
+### 5. Root-Cause Repair
 
 When fixing a problem, do not optimize for the quickest visible patch. Use root-cause repair:
 
@@ -134,7 +158,7 @@ Forbidden repair patterns:
 - leave a successful `ssh`, ad hoc Python, Helm, `kubectl patch`, or copied-bundle edit as the only implementation
 - special-case only the observed input when the bug is general
 
-### 5. Persistence / Repeatability
+### 6. Persistence / Repeatability
 
 A workflow is not fixed if it only works because of untracked local or remote state.
 
@@ -146,9 +170,9 @@ If you create or modify any temporary script, patch, Python file, YAML file, gen
 - Final status cannot be PASS if required changes exist only on a remote host, local temp directory, or external disk with no repo-tracked source or documented handoff.
 - Treat direct remote heredocs, ad hoc Python, one-off Helm commands, `kubectl patch`, generated YAML edits, and copied offline-bundle edits as diagnostics until their equivalent source/template/package input is updated.
 - When source is available and the work is still in development, do not create customer-facing patch layers or overlay archives as the durable fix unless the user explicitly asks for a released-version hotfix.
-- If later user clarification or newer E2E evidence supersedes an older blocker, update the task notes/status so stale "blocked" records do not survive as current truth.
+- If later user clarification or newer E2E evidence supersedes an older blocker, update task notes/status so stale "blocked" records do not survive as current truth.
 
-### 5.1 Secret Payload Handling
+### 6.1 Secret Payload Handling
 
 Some internal products legitimately send passwords, tokens, or keys in API payloads. That does not make the values safe to expose.
 
@@ -157,21 +181,17 @@ Some internal products legitimately send passwords, tokens, or keys in API paylo
 - Do not pass secrets through command-line arguments that appear in shell history or process listings; prefer stdin JSON, files outside git, Kubernetes Secret material, or redacted summaries.
 - Keep "payload may include a secret" separate from "the agent may print or persist that secret"; the latter remains forbidden.
 
-### 6. Docker / Platform Safety
+### 7. Docker / Platform Safety
 
 For Docker, build, deployment, or multi-architecture tasks, classify as S2 or higher.
 
 - For first-party images, prefer BuildKit/buildx and explicit platform-aware args such as `TARGETOS` and `TARGETARCH` when appropriate.
 - For third-party images, inspect the image manifest/platform support before changing anything.
-- If a third-party image lacks a required platform, stop and report:
-  - image name
-  - required platform
-  - platforms found
-  - smallest viable options
+- If a third-party image lacks a required platform, stop and report: image name, required platform, platforms found, smallest viable options.
 - Never rewrite, retag, rebuild, emulate, or "convert" a third-party ARM-only image into AMD64 or vice versa.
 - Never silently change a third-party image registry, tag, digest, platform, or base image to make verification pass.
 
-### 7. Fail Fast
+### 8. Fail Fast
 
 If required information is missing or unverifiable: stop, state the blocker, give the smallest next decision needed. Never invent business behavior, patch around unknowns, or pretend verification passed.
 
@@ -179,7 +199,7 @@ If required information is missing or unverifiable: stop, state the blocker, giv
 
 Produce before editing code (S1+). The contract is lightweight scaffolding for this task. Persist it only when the user asks or when it captures reusable project knowledge.
 
-**S1 — lightweight (enough for most tasks):**
+**S1 — lightweight:**
 
 ```md
 # Goal Contract
@@ -202,10 +222,15 @@ Produce before editing code (S1+). The contract is lightweight scaffolding for t
 - AC-001: ...
 - AC-002: ...
 
+## Outcome Rubric
+- R-001 / AC-001: [required evidence]
+- R-002 / AC-002: [required evidence]
+- R-SCOPE: [diff boundary evidence]
+
 ## Verification
-| AC | Evidence |
-|----|----------|
-| AC-001 | [test/command/manual check] |
+| AC/Rubric | Evidence |
+|-----------|----------|
+| AC-001 / R-001 | [test/command/manual check] |
 
 ## Stop Conditions
 - [optional: when to stop instead of guessing]
@@ -291,13 +316,11 @@ def test_ac002_allows_refresh_within_grace_window(): ...
 
 If test names cannot include AC IDs, record the mapping in the final evidence table.
 
-## Verification Loop
+## Verification / Outcome Loop
 
-After implementation, run gates. Max 3 repair attempts. For detailed gate checklists and error recovery guidance, see [reference.md](reference.md).
+After implementation, run gates. Max 3 repair attempts unless the approved Outcome Snapshot says otherwise.
 
 ### Gate 0: Root-Cause Check (bugfix/repair tasks)
-
-For fixes and repair loops, record:
 
 ```text
 Failure:
@@ -323,8 +346,6 @@ Check: only planned/allowed files changed, no forbidden files, no unrelated refa
 
 Run project-appropriate commands discovered during recon. Do not invent success. Capture exit codes.
 
-Examples:
-
 ```bash
 go test ./... && go vet ./...
 npm test && npm run lint
@@ -332,21 +353,21 @@ make test && make lint
 pytest -v
 ```
 
-### Gate 3: AC Coverage
+### Gate 3: AC / Rubric Coverage
 
-For every AC, identify evidence. Mark pass/fail/not verified:
+For every AC and rubric criterion, identify evidence:
 
 ```text
-AC-001: PASS via TestRateLimitBlocksSixthRequest
-AC-002: PASS via TestRateLimitRetryAfterHeader
-AC-003: NOT VERIFIED because [reason]
+AC-001 / R-001: PASS via TestRateLimitBlocksSixthRequest
+AC-002 / R-002: PASS via TestRateLimitRetryAfterHeader
+AC-003 / R-003: NOT VERIFIED because [reason]
 ```
 
-If any AC lacks evidence, final status cannot be PASS.
+If any required criterion lacks evidence, final status cannot be PASS.
 
 ### Gate 4: Drift Check
 
-Compare final diff against the Goal Contract:
+Compare final diff against the Goal Contract and Outcome Snapshot:
 
 - Does implementation still match intent?
 - Did any assumption become false?
@@ -354,12 +375,13 @@ Compare final diff against the Goal Contract:
 - Did tests assert implementation details instead of business behavior?
 - Did implementation add hidden business rules?
 - Did Docker/vendor-image/platform behavior change outside the contract?
+- Did the solution satisfy the rubric or merely produce plausible output?
 
 ### Gate 5: Risk Check (S2/S3 only)
 
-Explicitly check: data loss, compatibility break, migration/rollback, security regression, concurrency/race, performance, deploy/runtime risk, Docker image/platform risk, third-party dependency/image risk, and remote/external-state risk.
+Check: data loss, compatibility break, migration/rollback, security regression, concurrency/race, performance, deploy/runtime risk, Docker image/platform risk, third-party dependency/image risk, and remote/external-state risk.
 
-For Docker/platform tasks, include manifest or build evidence when applicable, for example:
+For Docker/platform tasks, include manifest or build evidence when applicable:
 
 ```bash
 docker buildx imagetools inspect <image>
@@ -380,23 +402,22 @@ Re-run command or runbook exists: yes/no/N/A
 
 If a required change exists only in a remote shell, temp file, external disk, or manual patch, final status cannot be PASS.
 
-### Gate 7: Fresh Review (S2/S3 required, S1 optional)
+### Gate 7: Fresh Review / Outcome Evaluation
 
-Use a fresh review pass with ONLY the contract, final diff, verification output, persistence status, and relevant architecture constraints. The reviewer must not see the implementer's self-justification or previous reviewer conclusions. For the exact reviewer prompt, see [reference.md](reference.md).
+Use a fresh evaluator with ONLY the contract, Outcome Snapshot, final diff, verification output, persistence status, and relevant architecture constraints. The evaluator must not see the implementer's self-justification or previous reviewer conclusions. For the exact evaluator prompt, see [outcomes.md](outcomes.md) and [reference.md](reference.md).
 
 ## Error Recovery
 
 When a gate fails:
 
-1. **Identify root cause** — code bug, test bug, contract bug, environment issue, stale remote state, or missing information?
-2. **Fix the root cause** — never delete a failing test, weaken assertions, change expected behavior, or patch downstream symptoms just to pass.
-3. **Persist the durable fix** — do not leave the only fix in a temp file, remote host, generated artifact, or external disk.
-4. **Rerun the failing gate** and all subsequent gates.
-5. **Max 3 repair loops.** After 3 failures: stop, report what failed, what was tried, and the smallest next decision needed.
+1. **Identify root cause** — code bug, test bug, contract bug, rubric bug, environment issue, stale remote state, or missing information?
+2. **Classify outcome result** — PASS / NEEDS_REVISION / PARTIAL / BLOCKED / FAILED.
+3. **Fix the root cause** — never delete a failing test, weaken assertions, change expected behavior, or patch downstream symptoms just to pass.
+4. **Persist the durable fix** — do not leave the only fix in a temp file, remote host, generated artifact, or external disk.
+5. **Rerun the failing gate** and all subsequent gates.
+6. **Max repair loops.** After the approved max: stop, report what failed, what was tried, and the smallest next decision needed.
 
-**Escalate immediately if:** the fix requires forbidden files, unapproved dependencies, Docker/vendor-image changes, untracked remote-only changes, or conflicts with architecture invariants.
-
-For common failure patterns and resolution, see [reference.md](reference.md).
+**Escalate immediately if:** the fix requires forbidden files, unapproved dependencies, Docker/vendor-image changes, untracked remote-only changes, contradicts the rubric, or conflicts with architecture invariants.
 
 ## Final Response
 
@@ -405,15 +426,15 @@ Never say "done" unless verification passed or limitations are explicit.
 ```md
 # Result
 
-Status: PASS / PARTIAL / BLOCKED / FAILED
+Status: PASS / NEEDS_REVISION / PARTIAL / BLOCKED / FAILED
 
 ## What changed
 - ...
 
-## AC Evidence
-| AC | Status | Evidence |
-|----|--------|----------|
-| AC-001 | PASS/FAIL/NOT VERIFIED | ... |
+## Outcome / Rubric Evidence
+| Criterion | Status | Evidence |
+|-----------|--------|----------|
+| R-001 / AC-001 | PASS/FAIL/NOT VERIFIED | ... |
 
 ## Root Cause (for fixes/repairs)
 - Failure:
@@ -449,11 +470,12 @@ If any command was not run, say `NOT RUN` and explain why.
 | Mode | Effect |
 |------|--------|
 | `grill` | Only clarify requirements. Output Decision Log + draft ACs. No code edits. |
-| `contract` | Produce only Goal Contract. No code edits. |
+| `contract` | Produce only Goal Contract and Outcome Snapshot. No code edits. |
 | `plan` | Produce only implementation plan (assumes contract exists). No code edits. |
-| `execute` | Execute against an approved contract. If none exists, create one first. |
-| `review` | Review uncommitted diff against contract + verification output. Report only blocking issues. No style nits. |
-| `repair` | Fix failed verification. Requires: failing output, diff, contract. Fix root cause — not just test expectations. Rerun AC coverage + drift + persistence checks. Do not expand scope. |
+| `execute` | Execute against an approved contract/outcome. If none exists, create one first. |
+| `outcome` | Produce or refine Outcome Snapshot and rubric only. No code edits. |
+| `review` | Evaluate uncommitted diff against contract + outcome rubric + verification output. Report only blocking issues. No style nits. |
+| `repair` | Fix failed verification. Requires: failing output, diff, contract/outcome. Fix root cause — not just test expectations. Rerun AC/rubric coverage + drift + persistence checks. Do not expand scope. |
 | `persist` | Audit temporary/manual/remote changes and convert them into repo-tracked scripts/config/templates/runbooks. No unrelated code edits. |
 
 ### `grill` output template
@@ -473,6 +495,9 @@ If any command was not run, say `NOT RUN` and explain why.
 ## Draft Acceptance Criteria
 - AC-001: ...
 
+## Draft Outcome Rubric
+- R-001 / AC-001: ...
+
 ## Follow-ups / out of scope
 - ...
 ```
@@ -485,10 +510,10 @@ If any command was not run, say `NOT RUN` and explain why.
 - Do not duplicate the same intent into multiple documents.
 - Keep contracts concise; reuse discovered repo commands.
 - For small tasks, keep the whole workflow short.
-- For large tasks, split into multiple Goal Contracts instead of one massive session.
-- Prefer AC evidence, root-cause notes, persistence status, and targeted diffs over long narrative summaries.
+- For large tasks, split into chained Goal Contracts / outcomes instead of one massive session.
+- Prefer outcome/rubric evidence, root-cause notes, persistence status, and targeted diffs over long narrative summaries.
 
-**Context budget:** when context grows large, summarize only confirmed contract + ACs + changed files + commands + failures + root cause + persistence status. Drop exploration chatter. Keep raw failing output if still relevant. Keep exact AC IDs.
+**Context budget:** when context grows large, summarize only confirmed contract + outcome rubric + ACs + changed files + commands + failures + root cause + persistence status. Drop exploration chatter. Keep raw failing output if still relevant. Keep exact AC/R IDs.
 
 ## Repository Knowledge
 
