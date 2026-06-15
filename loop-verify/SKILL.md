@@ -15,6 +15,7 @@ Lightweight loop-engineering workflow. Preserve intent, reduce scope drift, impl
 - **Spec is contract/scaffolding, not a permanent source of truth by default.** Use it to lock important decisions before coding. Persist only reusable invariants, decisions, or pitfalls.
 - **Root cause over band-aids.** A fix that only hides a symptom is incomplete. Reproduce the failure, identify the ownership layer, add durable correction, and verify with a regression check.
 - **Repeatability over local heroics.** Temporary scripts, remote-host edits, patch files, YAML/Python changes, and deployment tweaks must be captured in the local repo or declared as non-repeatable risk.
+- **Source truth over patch stacks.** If the source is available during active development, edit the source, template, generator, Helm chart, or offline package input directly. Patch archives and overlay scripts are for explicit released-version hotfixes, not default development work.
 - **More context, less control.** Give rich context (repo structure, existing code, constraints, prior decisions) instead of rigid multi-tool chains.
 - **One strong workflow, not stitched tools.** Prefer fewer contexts, fewer subagents, smaller diffs, and stronger gates.
 - **Spec is a spectrum.** From a one-line intent to full ACs and risk register — match spec weight to task complexity.
@@ -130,18 +131,31 @@ Forbidden repair patterns:
 - add broad retries/sleeps/timeouts without proving the failure mode
 - weaken tests or change expected behavior to match buggy code
 - patch generated/remote files without persisting the source template
+- leave a successful `ssh`, ad hoc Python, Helm, `kubectl patch`, or copied-bundle edit as the only implementation
 - special-case only the observed input when the bug is general
 
 ### 5. Persistence / Repeatability
 
 A workflow is not fixed if it only works because of untracked local or remote state.
 
-If you create or modify any temporary script, patch, Python file, YAML file, generated config, deployment manifest, remote cloud host file, environment setting, or external disk deployment file:
+If you create or modify any temporary script, patch, Python file, YAML file, generated config, Helm value/template, deployment manifest, remote cloud host file, environment setting, copied bundle, or external disk deployment file:
 
 - Capture the durable source in the local repository when possible.
 - Prefer `scripts/`, `deploy/`, `config/`, `docs/runbooks/`, `patches/`, `templates/`, or the repo's existing convention.
 - If the durable source lives outside this repo, record the exact external path, reason, and sync command/template.
 - Final status cannot be PASS if required changes exist only on a remote host, local temp directory, or external disk with no repo-tracked source or documented handoff.
+- Treat direct remote heredocs, ad hoc Python, one-off Helm commands, `kubectl patch`, generated YAML edits, and copied offline-bundle edits as diagnostics until their equivalent source/template/package input is updated.
+- When source is available and the work is still in development, do not create customer-facing patch layers or overlay archives as the durable fix unless the user explicitly asks for a released-version hotfix.
+- If later user clarification or newer E2E evidence supersedes an older blocker, update the task notes/status so stale "blocked" records do not survive as current truth.
+
+### 5.1 Secret Payload Handling
+
+Some internal products legitimately send passwords, tokens, or keys in API payloads. That does not make the values safe to expose.
+
+- It is acceptable for the product/browser/API call to carry a secret when that is the documented contract.
+- Do not log, screenshot, echo, HAR-capture, telemetry-capture, final-answer, or commit request bodies containing secrets.
+- Do not pass secrets through command-line arguments that appear in shell history or process listings; prefer stdin JSON, files outside git, Kubernetes Secret material, or redacted summaries.
+- Keep "payload may include a secret" separate from "the agent may print or persist that secret"; the latter remains forbidden.
 
 ### 6. Docker / Platform Safety
 

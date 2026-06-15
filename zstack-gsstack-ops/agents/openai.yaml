@@ -1,0 +1,4 @@
+interface:
+  display_name: "ZStack GSStack Ops"
+  short_description: "Run safe ZStack restore and GSStack validation workflows"
+  default_prompt: "Use $zstack-gsstack-ops to plan and validate a GSStack ZStack snapshot restore."

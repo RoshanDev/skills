@@ -76,6 +76,8 @@ Flag and stop if the proposed fix does any of these without explicit approval:
 □ Special-cases only the observed bad input when the bug is general
 □ Patches generated files but not the generator/template
 □ Patches a remote host but not the repo source/runbook
+□ Leaves a successful direct remote command, ad hoc script, Helm command, kubectl patch, or copied-bundle edit without a durable source update
+□ Creates a patch or overlay layer even though the editable source/template/package input is available and the task is still in development
 □ Adds defensive nil/empty/default handling without explaining why invalid state exists
 □ Moves the failure elsewhere instead of fixing ownership layer
 ```
@@ -105,10 +107,46 @@ Can the root cause be identified within the current contract and safe scope?
 □ No deleted files unless explicitly planned
 □ No Docker base image, vendor image, registry, tag, digest, or platform changes unless approved
 □ No generated/deployed file changed without changing its durable source/template
+□ No live-only remote, Helm, kubectl, generated YAML, or offline-bundle change remains as the only implementation
+□ No patch/overlay archive is used as the primary development fix when the source is available
 □ git diff --stat line count is proportional to task scope
 ```
 
 **When to flag:** If any unplanned file, unapproved image/dependency change, or non-durable generated/deploy change appears in the diff, stop. Either update the contract with user approval or revert the change.
+
+---
+
+## Persistence Source-Truth Checklist
+
+Use this when a task touches deployment, remote hosts, Helm, Kubernetes objects, generated YAML, offline artifacts, or copied release bundles.
+
+```text
+□ Every successful direct remote command is either productized or recorded as diagnostic-only
+□ Every ad hoc Python/shell script has an equivalent checked-in script, template, generator, or runbook
+□ Every Helm value/template change is captured in the chart or source defaults, not only in a live release
+□ Every kubectl patch is backed by source manifests, controllers, defaults, or a documented replay path
+□ Every copied/offline bundle edit is synced back to the package source or accompanied by exact external path and checksum update instructions
+□ Image registry, tag, digest, and checksum metadata agree across source, generated artifacts, live runtime, and offline package inputs
+□ Topology belongs in inventory/config; no 1-node, 3-node, or N-node-only fork was introduced for reusable logic
+□ Stale blocker/status notes were marked superseded when newer user clarification or newer E2E evidence changed the current truth
+```
+
+Final PASS is not allowed if a required fix survives only in shell history, a temp file, a live cluster, or an untracked external bundle.
+
+---
+
+## Secret Evidence Checklist
+
+Use this when browser/API/internal-network flows include passwords, tokens, access keys, kubeconfigs, registry credentials, or SSH credentials.
+
+```text
+□ The product contract actually requires the secret in the payload, or the secret was moved to a safer mechanism
+□ Request bodies containing secrets were not printed, screenshot, HAR-captured, committed, or copied into notes/finals
+□ Shell commands did not pass secrets as visible argv flags
+□ Evidence uses redacted summaries, status codes, resource names, or Secret existence checks instead of raw secret values
+□ Logs and telemetry added by the change do not persist secrets
+□ Public repos and skills contain placeholders, not lab endpoints, account names, access keys, secret keys, passwords, kubeconfigs, or tokens
+```
 
 ---
 

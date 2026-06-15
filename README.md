@@ -8,6 +8,7 @@ A collection of installable Agent Skills for AI coding CLIs (Codex, Claude Code,
 |-------|-------------|----------------------|
 | **[loop-verify](loop-verify/)** | Lightweight verification-loop coding workflow | Codex project skill: `.agents/skills/loop-verify`<br>Claude user skill: `~/.claude/skills/loop-verify` |
 | **[md2docx](md2docx/)** | Markdown to Word (DOCX) converter with tables, images, CJK fonts, Mermaid | `~/.claude/skills/md2docx` or project skill directory |
+| **[zstack-gsstack-ops](zstack-gsstack-ops/)** | Sanitized GSStack/ZStack lab operations workflow for snapshot recovery, KubeKey replayability, and secret-safe E2E verification | Codex user skill: `~/.agents/skills/zstack-gsstack-ops` |
 
 ## Quick Install
 
@@ -17,6 +18,20 @@ Clone this repository first:
 git clone https://github.com/RoshanDev/skills.git
 cd skills
 ```
+
+### Preferred symlink install
+
+Keep this repository as the canonical source and link user/project skill paths to it. This avoids silent drift between root-level, user-level, and project-level copies.
+
+```bash
+mkdir -p ~/.agents/skills ~/.codex/skills
+ln -sfn /home/roshan/Developer/skills/loop-verify ~/.agents/skills/loop-verify
+ln -sfn /home/roshan/Developer/skills/loop-verify ~/.codex/skills/loop-verify
+ln -sfn /home/roshan/Developer/skills/zstack-gsstack-ops ~/.agents/skills/zstack-gsstack-ops
+ln -sfn /home/roshan/Developer/skills/zstack-gsstack-ops ~/.codex/skills/zstack-gsstack-ops
+```
+
+For a project-local skill path, prefer the same symlink unless the project has a genuinely different contract. If a project copy is modified, merge the reusable part back here before relying on it.
 
 ### loop-verify
 
@@ -28,7 +43,7 @@ From your target project root:
 
 ```bash
 mkdir -p .agents/skills
-cp -R /path/to/skills/loop-verify .agents/skills/loop-verify
+ln -sfn /home/roshan/Developer/skills/loop-verify .agents/skills/loop-verify
 ```
 
 Then invoke it in Codex with:
@@ -43,14 +58,24 @@ $loop-verify review
 
 ```bash
 mkdir -p ~/.claude/skills
-cp -R loop-verify ~/.claude/skills/loop-verify
+ln -sfn /home/roshan/Developer/skills/loop-verify ~/.claude/skills/loop-verify
 ```
 
 #### QoderWork
 
 ```bash
 mkdir -p ~/.qoderwork/skills
-cp -R loop-verify ~/.qoderwork/skills/loop-verify
+ln -sfn /home/roshan/Developer/skills/loop-verify ~/.qoderwork/skills/loop-verify
+```
+
+### zstack-gsstack-ops
+
+The public skill is intentionally sanitized. Keep lab endpoints, VM IDs, access keys, secret keys, node passwords, registry credentials, and kubeconfigs in ignored local files or project-private documentation only.
+
+```bash
+mkdir -p ~/.agents/skills ~/.codex/skills
+ln -sfn /home/roshan/Developer/skills/zstack-gsstack-ops ~/.agents/skills/zstack-gsstack-ops
+ln -sfn /home/roshan/Developer/skills/zstack-gsstack-ops ~/.codex/skills/zstack-gsstack-ops
 ```
 
 ### md2docx
@@ -68,6 +93,8 @@ skills/
 │   ├── SKILL.md
 │   ├── examples.md
 │   └── reference.md
+├── zstack-gsstack-ops/
+│   └── SKILL.md
 └── md2docx/
     ├── SKILL.md
     ├── converter-template.md
