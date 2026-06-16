@@ -6,9 +6,9 @@ A collection of installable Agent Skills for AI coding CLIs (Codex, Claude Code,
 
 | Skill | Description | Install path examples |
 |-------|-------------|----------------------|
-| **[loop-verify](loop-verify/)** | Lightweight outcome/rubric verification-loop coding workflow | Codex project skill: `.agents/skills/loop-verify`<br>Claude user skill: `~/.claude/skills/loop-verify` |
+| **[loop-verify](loop-verify/)** | Lightweight outcome/rubric verification-loop coding workflow with root-cause, persistence, and user-flow evidence gates | Codex project skill: `.agents/skills/loop-verify`<br>Claude user skill: `~/.claude/skills/loop-verify` |
 | **[md2docx](md2docx/)** | Markdown to Word (DOCX) converter with tables, images, CJK fonts, Mermaid | `~/.claude/skills/md2docx` or project skill directory |
-| **[zstack-gsstack-ops](zstack-gsstack-ops/)** | Sanitized GSStack/ZStack lab operations workflow for snapshot recovery, KubeKey replayability, and secret-safe E2E verification | Codex user skill: `~/.agents/skills/zstack-gsstack-ops` |
+| **[zstack-gsstack-ops](zstack-gsstack-ops/)** | Sanitized GSStack/ZStack lab operations workflow for snapshot recovery, KubeKey replayability, and safe E2E verification | Codex user skill: `~/.agents/skills/zstack-gsstack-ops` |
 
 ## Quick Install
 
@@ -35,7 +35,7 @@ For a project-local skill path, prefer the same symlink unless the project has a
 
 ### loop-verify
 
-Install the whole skill directory, not only `SKILL.md`. The skill links to `examples.md`, `reference.md`, and `outcomes.md`, so copying only the manifest will break progressive disclosure.
+Install the whole skill directory, not only `SKILL.md`. The skill links to `examples.md`, `reference.md`, `user-flow-evidence.md`, and `outcomes.md`, so copying only the manifest will break progressive disclosure.
 
 #### Codex project skill
 
@@ -51,6 +51,7 @@ Then invoke it in Codex with:
 ```text
 $loop-verify contract
 $loop-verify outcome
+$loop-verify user-flow
 $loop-verify execute
 $loop-verify review
 ```
@@ -71,7 +72,7 @@ ln -sfn /home/roshan/Developer/skills/loop-verify ~/.qoderwork/skills/loop-verif
 
 ### zstack-gsstack-ops
 
-The public skill is intentionally sanitized. Keep lab endpoints, VM IDs, access keys, secret keys, node passwords, registry credentials, and kubeconfigs in ignored local files or project-private documentation only.
+The public skill is intentionally sanitized. Keep lab endpoints, private IDs, credentials, and private environment details in ignored local files or project-private documentation only.
 
 ```bash
 mkdir -p ~/.agents/skills ~/.codex/skills
@@ -94,7 +95,8 @@ skills/
 │   ├── SKILL.md
 │   ├── examples.md
 │   ├── outcomes.md
-│   └── reference.md
+│   ├── reference.md
+│   └── user-flow-evidence.md
 ├── zstack-gsstack-ops/
 │   └── SKILL.md
 └── md2docx/
@@ -108,7 +110,8 @@ skills/
 
 - Keep the main `SKILL.md` under control and push detailed examples/checklists/rubric patterns into supporting files.
 - Do not duplicate the same workflow across multiple tools. Prefer one owner for intent, one owner for evidence, and explicit gates for verification.
-- For coding workflows, use acceptance criteria as the contract and tests/checks as executable evidence. Do not let the implementing agent self-certify without command output, AC/rubric coverage, and persistence status when relevant.
+- For coding workflows, use acceptance criteria as the contract and tests/checks as executable evidence. Do not let the implementing agent self-certify without command output, AC/rubric coverage, user-flow evidence when relevant, and persistence status when relevant.
+- For UI/browser defects, curl/hooks/Python/direct API checks are diagnosis/setup evidence only. Final PASS needs browser-driven user-path evidence unless explicitly waived.
 
 ## License
 
