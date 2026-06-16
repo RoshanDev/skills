@@ -1,6 +1,6 @@
 ---
 name: loop-verify
-description: Use this skill for coding tasks that need clarified intent, scope control, acceptance-criteria mapping, outcome rubrics, root-cause repair, persistence of manual/remote changes, user-flow evidence, verification loops, and anti-overengineering review. Trigger for feature work, bug fixes, refactors, backend logic, UI/browser flows, Docker/build/deployment changes, public API changes, multi-file changes, or any task where correctness or repeatability matters. Do not use for pure Q&A or obvious one-line S0 edits unless asked.
+description: Use this skill for coding tasks that need clarified intent, scope control, acceptance-criteria mapping, outcome rubrics, E2E scope discovery, root-cause repair, persistence of manual/remote changes, user-flow evidence, verification loops, and anti-overengineering review. Trigger for feature work, bug fixes, refactors, backend logic, UI/browser flows, Docker/build/deployment changes, public API changes, multi-file changes, or any task where correctness or repeatability matters. Do not use for pure Q&A or obvious one-line S0 edits unless asked.
 ---
 
 # Loop Verify
@@ -10,6 +10,7 @@ Lightweight loop-engineering workflow. Preserve intent, reduce scope drift, impl
 **Supporting files:**
 
 - [reference.md](reference.md): detailed gate checklists, root-cause repair, persistence checks, reviewer prompt.
+- [e2e-scope-discovery.md](e2e-scope-discovery.md): how to infer upstream/downstream scope and choose a minimal realistic E2E slice.
 - [user-flow-evidence.md](user-flow-evidence.md): browser UI / Network / user-path validation gate.
 - [outcomes.md](outcomes.md): outcome/rubric style autonomous loops.
 - [examples.md](examples.md): filled examples and anti-patterns.
@@ -18,6 +19,7 @@ Lightweight loop-engineering workflow. Preserve intent, reduce scope drift, impl
 
 - **Outcome first.** Define what done looks like and how quality will be measured before autonomous work begins.
 - **Code is actual system state, not automatic correctness.** The Goal Contract captures intent; ACs define what must be true; tests/checks are evidence. PASS requires evidence mapped to ACs.
+- **Discover the E2E slice, do not ask the user to write the whole map.** For feature work, infer upstream prerequisites, changed surface, downstream effects, and user-visible outcomes from code, routes, UI, APIs, docs, and existing tests. Ask only for genuinely missing business decisions or environment access.
 - **User path beats programmatic shortcuts.** If a defect came from browser UI, modal, wizard, form, selector, button, screenshot, or browser Network, curl/hooks/Python/API seeding are diagnosis/setup only. Final PASS requires browser-driven evidence from the same user entry path unless the user explicitly waives it.
 - **Root cause over band-aids.** A fix that only hides a symptom is incomplete. Reproduce the failure, identify the owning layer, fix the owning layer, and add regression evidence.
 - **Repeatability over local heroics.** Temporary scripts, remote-host edits, patch files, YAML/Python changes, deployment tweaks, and copied bundle edits must be captured in the repo or declared as non-repeatable risk.
@@ -29,6 +31,7 @@ Lightweight loop-engineering workflow. Preserve intent, reduce scope drift, impl
 ## Mandatory Supporting-File Reads
 
 - For S2/S3, Docker/platform, deployment, remote-host, data, security, or `repair` tasks: read relevant sections of `reference.md` before final verification.
+- For feature work with browser/product E2E expectations, changed UI/API integration, or unclear upstream/downstream impact: read `e2e-scope-discovery.md` before finalizing the Goal Contract.
 - For any browser UI, modal, wizard, form, selector, button, screenshot, or browser Network request: read `user-flow-evidence.md` before writing the Goal Contract and before final verification.
 - For autonomous loops, `execute`, `repair`, `review`, `persist`, or ambiguous done-state: read `outcomes.md` and use an Outcome Snapshot.
 - Read `examples.md` when unsure how to fill a template.
@@ -39,6 +42,7 @@ Lightweight loop-engineering workflow. Preserve intent, reduce scope drift, impl
 User request arrives
 ├─ Obviously trivial? → S0: just do it, show diff + exit code if relevant
 ├─ Otherwise → Recon first
+├─ Feature or fix has product/user-visible behavior? → discover E2E impact map
 ├─ Browser/UI/Network/user-path failure? → classify S2; require User-Flow Evidence Gate
 ├─ Important choices open? → Grill one question at a time
 ├─ S1+ → Draft Goal Contract + Outcome Snapshot
@@ -52,8 +56,8 @@ User request arrives
 | Level | Description | Process |
 |-------|-------------|---------|
 | **S0** trivial | One-file, low-risk edit | Skip to implementation. No contract needed. |
-| **S1** normal | Feature/fix with tests, limited files, low blast radius | Lightweight Goal Contract + Outcome Snapshot. Implement and verify. |
-| **S2** risky | Auth, payment, data migration, concurrency, security, public API, Docker/build/deploy, remote host changes, third-party image/platform, multi-service behavior, browser UI/user-path/Network defect | Full Goal Contract + risk list + outcome rubric + verification loop. UI issues require User-Flow Evidence Gate. |
+| **S1** normal | Feature/fix with tests, limited files, low blast radius | Lightweight Goal Contract + Outcome Snapshot. If user-visible behavior changes, include a small E2E Impact Map. |
+| **S2** risky | Auth, payment, data migration, concurrency, security, public API, Docker/build/deploy, remote host changes, third-party image/platform, multi-service behavior, browser UI/user-path/Network defect | Full Goal Contract + risk list + outcome rubric + verification loop. UI issues require E2E Scope Discovery and User-Flow Evidence Gate. |
 | **S3** architectural | Changes boundaries, contracts, storage model, service topology, or major subsystem behavior | Design review before implementation. Split into chained S1/S2 outcomes. |
 
 If the task touches data, security, deploy, Docker/platform, public API, remote hosts, multi-service behavior, or browser user flows, escalate to S2+.
@@ -70,6 +74,9 @@ Recon summary:
 - Existing patterns:
 - Likely test commands:
 - Existing UI/E2E tools:
+- Potential entry points:
+- Potential upstream prerequisites:
+- Potential downstream effects:
 - Risk areas:
 - Unknowns that need user input:
 ```
@@ -93,7 +100,17 @@ Once a Goal Contract is approved, do not add new requirements mid-run. Record ne
 
 Do not introduce new architecture, dependencies, broad refactors, public API changes, DB schema changes, deployment changes, Docker base image changes, vendor image changes, or unrelated style churn unless explicitly required.
 
-### 4. User-Flow Evidence
+### 4. E2E Scope Discovery
+
+For S1+ feature/fix work with user-visible behavior or product E2E expectation:
+
+- Infer the E2E Impact Map from code and docs: entry points, upstream prerequisites, changed surface, downstream effects, existing verification, and proposed E2E slice.
+- The user does not need to list all upstream/downstream dependencies. Ask only when recon cannot answer a business decision or environment requirement.
+- Choose the smallest realistic vertical slice that crosses the changed surface and at least one meaningful downstream effect.
+- Do not validate only the component you changed when the product behavior crosses component/API/backend boundaries.
+- If no realistic E2E slice can be identified, mark verification as NEEDS_REVISION or BLOCKED instead of claiming PASS.
+
+### 5. User-Flow Evidence
 
 For browser/UI/user-path issues:
 
@@ -103,7 +120,7 @@ For browser/UI/user-path issues:
 - Evidence must include user-visible controls interacted with, captured Network request/status when relevant, UI result/error state, and whether the next user action is possible.
 - If real login/session/environment is unavailable, final status is PARTIAL or BLOCKED, not PASS.
 
-### 5. Outcome / Rubric Discipline
+### 6. Outcome / Rubric Discipline
 
 For S1+ tasks, define an Outcome Snapshot before implementation:
 
@@ -115,6 +132,7 @@ For S1+ tasks, define an Outcome Snapshot before implementation:
 
 ## Rubric
 - R-001 / AC-001: [observable criterion and required evidence]
+- R-E2E: For user-visible changes, a representative E2E slice crosses the changed surface and verifies a downstream effect.
 - R-USERFLOW: For UI/browser defects, user path evidence exists from the same entry point.
 - R-RC: For repair tasks, root cause is identified, owning layer fixed, and regression evidence exists.
 - R-PERSIST: Temporary/manual/remote/deployment changes are repo-tracked or documented as one-off risk.
@@ -124,7 +142,7 @@ For S1+ tasks, define an Outcome Snapshot before implementation:
 3 unless the user chooses another limit.
 ```
 
-### 6. Root-Cause Repair
+### 7. Root-Cause Repair
 
 When fixing a problem:
 
@@ -144,7 +162,7 @@ Forbidden repair patterns:
 - leave successful `ssh`, ad hoc script, Helm, `kubectl patch`, or copied-bundle edit as the only implementation
 - special-case only the observed input when the bug is general
 
-### 7. Persistence / Repeatability
+### 8. Persistence / Repeatability
 
 A workflow is not fixed if it only works because of untracked local or remote state.
 
@@ -156,7 +174,7 @@ If you create or modify any temporary script, patch, Python file, YAML file, gen
 - Final status cannot be PASS if required changes exist only on a remote host, temp directory, external disk, or live cluster with no repo-tracked source or documented handoff.
 - Treat direct remote commands, ad hoc scripts, one-off Helm commands, `kubectl patch`, generated YAML edits, and copied offline-bundle edits as diagnostics until their source/template/package input is updated.
 
-### 8. Docker / Platform Safety
+### 9. Docker / Platform Safety
 
 For Docker/build/deployment/multi-architecture tasks, classify as S2+.
 
@@ -166,7 +184,7 @@ For Docker/build/deployment/multi-architecture tasks, classify as S2+.
 - Never rewrite, retag, rebuild, emulate, or convert a third-party image to pretend it supports another architecture.
 - Never silently change third-party registry, tag, digest, platform, or base image to make verification pass.
 
-### 9. Fail Fast
+### 10. Fail Fast
 
 If required information is missing or unverifiable: stop, state the blocker, give the smallest next decision needed. Never invent business behavior, patch around unknowns, or pretend verification passed.
 
@@ -191,18 +209,28 @@ Produce before editing code (S1+):
 ## Assumptions
 - A1: ...
 
+## E2E Impact Map
+- Entry points:
+- Upstream prerequisites:
+- Changed surface:
+- Downstream effects:
+- Existing verification:
+- Proposed E2E slice:
+
 ## Acceptance Criteria
 - AC-001: ...
-- AC-002: ...
+- AC-E2E-001: [when user-visible behavior changes]
 
 ## Outcome Rubric
 - R-001 / AC-001: [required evidence]
+- R-E2E / AC-E2E-001: [representative E2E slice evidence]
 - R-SCOPE: [diff boundary evidence]
 
 ## Verification
 | AC/Rubric | Evidence |
 |-----------|----------|
 | AC-001 / R-001 | [test/command/manual check] |
+| AC-E2E-001 / R-E2E | [browser/product E2E slice or reason N/A] |
 
 ## Stop Conditions
 - ...
@@ -249,6 +277,11 @@ After approval, produce:
 
 ## Tests / AC mapping
 - AC-001 -> [test name or command]
+
+## E2E validation plan
+- Impact map source: [files/routes/components/APIs inspected]
+- E2E slice: [entry point -> action -> downstream effect -> assertion]
+- Skipped dependencies and why: [none/list]
 
 ## User-flow validation plan
 - [browser path / Playwright / Cypress / manual browser path, or N/A]
@@ -301,15 +334,29 @@ Run project-appropriate commands discovered during recon. Capture exit codes.
 
 Every AC and rubric criterion must have evidence. Missing required evidence means final status cannot be PASS.
 
-### Gate 4: Drift Check
+### Gate 4: E2E Scope Coverage
+
+For user-visible changes, verify:
+
+```text
+E2E Impact Map produced: yes/no/N/A
+Representative slice crosses changed surface: yes/no/N/A
+At least one downstream effect verified: yes/no/N/A
+Skipped upstream/downstream dependencies listed: yes/no/N/A
+Programmatic setup limited to prerequisites: yes/no/N/A
+```
+
+If this gate is applicable but missing, final status cannot be PASS.
+
+### Gate 5: Drift Check
 
 Check intent alignment, assumptions, out-of-scope behavior, hidden business rules, defensive shortcuts, and whether validation downgraded a user path to programmatic evidence.
 
-### Gate 5: Risk Check
+### Gate 6: Risk Check
 
 For S2/S3, check data loss, compatibility, rollback, security, concurrency, performance, deploy/runtime, Docker/platform, third-party dependency, remote/external state, and user-flow false-positive risk.
 
-### Gate 6: Persistence / Reproducibility Check
+### Gate 7: Persistence / Reproducibility Check
 
 ```text
 Temporary scripts captured: yes/no/N/A
@@ -321,7 +368,7 @@ Re-run command or runbook exists: yes/no/N/A
 
 If required changes exist only in runtime/manual state, final status cannot be PASS.
 
-### Gate 7: User-Flow Evidence Check
+### Gate 8: User-Flow Evidence Check
 
 Required for UI/browser/user-path tasks. Read `user-flow-evidence.md`.
 
@@ -337,15 +384,15 @@ Programmatic shortcuts used only for setup/diagnosis: yes/no/N/A
 
 If this gate is required but missing, final status is PARTIAL or BLOCKED, not PASS.
 
-### Gate 8: Fresh Review / Outcome Evaluation
+### Gate 9: Fresh Review / Outcome Evaluation
 
-Use a fresh evaluator with ONLY the contract, Outcome Snapshot, final diff, verification output, user-flow evidence if relevant, persistence status, and relevant architecture constraints. Do not include implementer self-justification or previous reviewer conclusions.
+Use a fresh evaluator with ONLY the contract, Outcome Snapshot, final diff, verification output, E2E impact map/evidence, user-flow evidence if relevant, persistence status, and relevant architecture constraints. Do not include implementer self-justification or previous reviewer conclusions.
 
 ## Error Recovery
 
 When a gate fails:
 
-1. Identify root cause: code bug, test bug, contract bug, rubric bug, environment issue, user-flow evidence gap, stale remote state, or missing information.
+1. Identify root cause: code bug, test bug, contract bug, rubric bug, missing E2E slice, environment issue, user-flow evidence gap, stale remote state, or missing information.
 2. Classify status: PASS / NEEDS_REVISION / PARTIAL / BLOCKED / FAILED.
 3. Fix the root cause; do not weaken tests, patch symptoms, or replace user flow with a diagnostic shortcut.
 4. Persist the durable fix.
@@ -368,6 +415,14 @@ Status: PASS / NEEDS_REVISION / PARTIAL / BLOCKED / FAILED
 | Criterion | Status | Evidence |
 |-----------|--------|----------|
 | R-001 / AC-001 | PASS/FAIL/NOT VERIFIED | ... |
+
+## E2E Scope Discovery
+- Entry points discovered:
+- Upstream prerequisites covered:
+- Downstream effects covered:
+- E2E slice run:
+- Skipped dependencies and why:
+- Programmatic setup used:
 
 ## Root Cause (for fixes/repairs)
 - Failure:
@@ -404,7 +459,7 @@ Status: PASS / NEEDS_REVISION / PARTIAL / BLOCKED / FAILED
 - ...
 ```
 
-If any command or required user-flow evidence was not obtained, say `NOT RUN` / `NOT VERIFIED` and explain why.
+If any required command, E2E slice, or user-flow evidence was not obtained, say `NOT RUN` / `NOT VERIFIED` and explain why.
 
 ## Special Modes
 
@@ -413,9 +468,10 @@ If any command or required user-flow evidence was not obtained, say `NOT RUN` / 
 | `grill` | Clarify requirements. Output Decision Log + draft ACs. No code edits. |
 | `contract` | Produce only Goal Contract and Outcome Snapshot. No code edits. |
 | `plan` | Produce only implementation plan. No code edits. |
+| `e2e-scope` | Discover entry points, upstream prerequisites, downstream effects, and proposed E2E slice. No unrelated code edits. |
+| `user-flow` | Produce or verify browser/user-path evidence plan. No unrelated code edits. |
 | `execute` | Execute against an approved contract/outcome. If none exists, create one first. |
 | `outcome` | Produce or refine Outcome Snapshot and rubric only. No code edits. |
-| `user-flow` | Produce or verify browser/user-path evidence plan. No unrelated code edits. |
 | `review` | Evaluate diff against contract + rubric + evidence. Blocking issues only. |
 | `repair` | Fix failed verification. Fix root cause, rerun relevant gates, do not expand scope. |
 | `persist` | Audit temporary/manual/remote changes and convert them into repo-tracked scripts/config/templates/runbooks. |
@@ -427,9 +483,9 @@ If any command or required user-flow evidence was not obtained, say `NOT RUN` / 
 - Do not create long speculative design docs.
 - Keep contracts concise; reuse discovered repo commands.
 - For large tasks, split into chained contracts/outcomes.
-- Prefer rubric evidence, root-cause notes, user-flow evidence, persistence status, and targeted diffs over narrative summaries.
+- Prefer rubric evidence, E2E scope evidence, root-cause notes, user-flow evidence, persistence status, and targeted diffs over narrative summaries.
 
-When context grows large, keep only confirmed contract + rubric + ACs + changed files + commands + failures + root cause + user-flow evidence + persistence status.
+When context grows large, keep only confirmed contract + rubric + ACs + changed files + commands + failures + E2E scope + root cause + user-flow evidence + persistence status.
 
 ## Repository Knowledge
 
@@ -442,4 +498,4 @@ docs/ai/verification.md
 docs/runbooks/
 ```
 
-Only with user approval. Good durable knowledge: architecture invariants, business rules tests depend on, deployment constraints, Docker image/platform constraints, production incidents, repeatable deployment/runbook steps, and stable user-flow validation commands. Bad: verbose narration, temporary debug notes, duplicate design docs, stale wishlists.
+Only with user approval. Good durable knowledge: architecture invariants, business rules tests depend on, deployment constraints, Docker image/platform constraints, production incidents, repeatable deployment/runbook steps, and stable E2E/user-flow validation commands. Bad: verbose narration, temporary debug notes, duplicate design docs, stale wishlists.
