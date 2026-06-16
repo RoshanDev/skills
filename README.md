@@ -6,7 +6,7 @@ A collection of installable Agent Skills for AI coding CLIs (Codex, Claude Code,
 
 | Skill | Description | Install path examples |
 |-------|-------------|----------------------|
-| **[loop-verify](loop-verify/)** | Lightweight outcome/rubric verification-loop coding workflow with root-cause, persistence, and user-flow evidence gates | Codex project skill: `.agents/skills/loop-verify`<br>Claude user skill: `~/.claude/skills/loop-verify` |
+| **[loop-verify](loop-verify/)** | Lightweight outcome/rubric verification-loop coding workflow with E2E scope discovery, root-cause, persistence, and user-flow evidence gates | Codex project skill: `.agents/skills/loop-verify`<br>Claude user skill: `~/.claude/skills/loop-verify` |
 | **[md2docx](md2docx/)** | Markdown to Word (DOCX) converter with tables, images, CJK fonts, Mermaid | `~/.claude/skills/md2docx` or project skill directory |
 | **[zstack-gsstack-ops](zstack-gsstack-ops/)** | Sanitized GSStack/ZStack lab operations workflow for snapshot recovery, KubeKey replayability, and safe E2E verification | Codex user skill: `~/.agents/skills/zstack-gsstack-ops` |
 
@@ -35,7 +35,7 @@ For a project-local skill path, prefer the same symlink unless the project has a
 
 ### loop-verify
 
-Install the whole skill directory, not only `SKILL.md`. The skill links to `examples.md`, `reference.md`, `user-flow-evidence.md`, and `outcomes.md`, so copying only the manifest will break progressive disclosure.
+Install the whole skill directory, not only `SKILL.md`. The skill links to `examples.md`, `reference.md`, `e2e-scope-discovery.md`, `user-flow-evidence.md`, and `outcomes.md`, so copying only the manifest will break progressive disclosure.
 
 #### Codex project skill
 
@@ -51,6 +51,7 @@ Then invoke it in Codex with:
 ```text
 $loop-verify contract
 $loop-verify outcome
+$loop-verify e2e-scope
 $loop-verify user-flow
 $loop-verify execute
 $loop-verify review
@@ -93,6 +94,7 @@ cd md2docx
 skills/
 ├── loop-verify/
 │   ├── SKILL.md
+│   ├── e2e-scope-discovery.md
 │   ├── examples.md
 │   ├── outcomes.md
 │   ├── reference.md
@@ -110,7 +112,8 @@ skills/
 
 - Keep the main `SKILL.md` under control and push detailed examples/checklists/rubric patterns into supporting files.
 - Do not duplicate the same workflow across multiple tools. Prefer one owner for intent, one owner for evidence, and explicit gates for verification.
-- For coding workflows, use acceptance criteria as the contract and tests/checks as executable evidence. Do not let the implementing agent self-certify without command output, AC/rubric coverage, user-flow evidence when relevant, and persistence status when relevant.
+- For coding workflows, use acceptance criteria as the contract and tests/checks as executable evidence. Do not let the implementing agent self-certify without command output, AC/rubric coverage, E2E scope evidence when relevant, user-flow evidence when relevant, and persistence status when relevant.
+- For feature work, the agent should infer the E2E Impact Map from code/routes/UI/API/tests and ask only for genuinely missing business or environment decisions.
 - For UI/browser defects, curl/hooks/Python/direct API checks are diagnosis/setup evidence only. Final PASS needs browser-driven user-path evidence unless explicitly waived.
 
 ## License
