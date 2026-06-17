@@ -23,12 +23,14 @@ cd skills
 
 Keep this repository as the canonical source and link user/project skill paths to it. This avoids silent drift between root-level, user-level, and project-level copies.
 
+Replace `/path/to/skills` with your local clone path, for example `$HOME/Developer/skills`.
+
 ```bash
 mkdir -p ~/.agents/skills ~/.codex/skills
-ln -sfn /home/roshan/Developer/skills/loop-verify ~/.agents/skills/loop-verify
-ln -sfn /home/roshan/Developer/skills/loop-verify ~/.codex/skills/loop-verify
-ln -sfn /home/roshan/Developer/skills/zstack-gsstack-ops ~/.agents/skills/zstack-gsstack-ops
-ln -sfn /home/roshan/Developer/skills/zstack-gsstack-ops ~/.codex/skills/zstack-gsstack-ops
+ln -sfn /path/to/skills/loop-verify ~/.agents/skills/loop-verify
+ln -sfn /path/to/skills/loop-verify ~/.codex/skills/loop-verify
+ln -sfn /path/to/skills/zstack-gsstack-ops ~/.agents/skills/zstack-gsstack-ops
+ln -sfn /path/to/skills/zstack-gsstack-ops ~/.codex/skills/zstack-gsstack-ops
 ```
 
 For a project-local skill path, prefer the same symlink unless the project has a genuinely different contract. If a project copy is modified, merge the reusable part back here before relying on it.
@@ -43,7 +45,7 @@ From your target project root:
 
 ```bash
 mkdir -p .agents/skills
-ln -sfn /home/roshan/Developer/skills/loop-verify .agents/skills/loop-verify
+ln -sfn /path/to/skills/loop-verify .agents/skills/loop-verify
 ```
 
 Then invoke it in Codex with:
@@ -61,14 +63,14 @@ $loop-verify review
 
 ```bash
 mkdir -p ~/.claude/skills
-ln -sfn /home/roshan/Developer/skills/loop-verify ~/.claude/skills/loop-verify
+ln -sfn /path/to/skills/loop-verify ~/.claude/skills/loop-verify
 ```
 
 #### QoderWork
 
 ```bash
 mkdir -p ~/.qoderwork/skills
-ln -sfn /home/roshan/Developer/skills/loop-verify ~/.qoderwork/skills/loop-verify
+ln -sfn /path/to/skills/loop-verify ~/.qoderwork/skills/loop-verify
 ```
 
 ### zstack-gsstack-ops
@@ -77,8 +79,8 @@ The public skill is intentionally sanitized. Keep lab endpoints, private IDs, cr
 
 ```bash
 mkdir -p ~/.agents/skills ~/.codex/skills
-ln -sfn /home/roshan/Developer/skills/zstack-gsstack-ops ~/.agents/skills/zstack-gsstack-ops
-ln -sfn /home/roshan/Developer/skills/zstack-gsstack-ops ~/.codex/skills/zstack-gsstack-ops
+ln -sfn /path/to/skills/zstack-gsstack-ops ~/.agents/skills/zstack-gsstack-ops
+ln -sfn /path/to/skills/zstack-gsstack-ops ~/.codex/skills/zstack-gsstack-ops
 ```
 
 ### md2docx
