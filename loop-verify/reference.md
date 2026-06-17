@@ -127,6 +127,8 @@ Use this when a task touches deployment, remote hosts, Helm, Kubernetes objects,
 □ Every kubectl patch is backed by source manifests, controllers, defaults, or a documented replay path
 □ Every copied/offline bundle edit is synced back to the package source or accompanied by exact external path and checksum update instructions
 □ Image registry, tag, digest, and checksum metadata agree across source, generated artifacts, live runtime, and offline package inputs
+□ Frontend UI changes are verified against the deployed artifact/image, not only the source tree or local build output
+□ Offline package fixes update the archive/OCI blobs and metadata, image list, digest list, chart/templates, and all affected checksums; a live Harbor push alone is not sufficient
 □ Topology belongs in inventory/config; no 1-node, 3-node, or N-node-only fork was introduced for reusable logic
 □ Stale blocker/status notes were marked superseded when newer user clarification or newer E2E evidence changed the current truth
 ```

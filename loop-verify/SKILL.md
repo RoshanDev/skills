@@ -173,6 +173,8 @@ If you create or modify any temporary script, patch, Python file, YAML file, gen
 - If the durable source lives outside this repo, record the exact external path, reason, and sync command/template.
 - Final status cannot be PASS if required changes exist only on a remote host, temp directory, external disk, or live cluster with no repo-tracked source or documented handoff.
 - Treat direct remote commands, ad hoc scripts, one-off Helm commands, `kubectl patch`, generated YAML edits, and copied offline-bundle edits as diagnostics until their source/template/package input is updated.
+- Treat a frontend source/build success as source evidence only. If the task claims a live UI change, verify that the deployed frontend/console artifact or image was rebuilt, published, rolled out, and observed in the target UI or deployed static assets.
+- Treat a live registry push as runtime evidence only. If the task claims an offline package fix, verify the package image archive or OCI layout, image list, digest list, chart/manifests, and checksum files all reference the intended artifact.
 
 ### 9. Docker / Platform Safety
 
