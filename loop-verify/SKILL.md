@@ -1,6 +1,6 @@
 ---
 name: loop-verify
-description: Use this skill for coding tasks that need clarified intent, scope control, acceptance-criteria mapping, outcome rubrics, E2E scope discovery, root-cause repair, persistence of manual/remote changes, user-flow evidence, verification loops, and anti-overengineering review. Trigger for feature work, bug fixes, refactors, backend logic, UI/browser flows, Docker/build/deployment changes, public API changes, multi-file changes, or any task where correctness or repeatability matters. Do not use for pure Q&A or obvious one-line S0 edits unless asked.
+description: Use this skill for coding tasks that need clarified intent, scope control, acceptance-criteria mapping, outcome rubrics, E2E scope discovery, root-cause repair, persistence of manual/remote changes, user-flow evidence, verification loops, optional external review, and anti-overengineering review. Trigger for feature work, bug fixes, refactors, backend logic, UI/browser flows, Docker/build/deployment changes, public API changes, multi-file changes, or any task where correctness or repeatability matters. Do not use for pure Q&A or obvious one-line S0 edits unless asked.
 ---
 
 # Loop Verify
@@ -12,6 +12,7 @@ Lightweight loop-engineering workflow. Preserve intent, reduce scope drift, impl
 - [reference.md](reference.md): detailed gate checklists, root-cause repair, persistence checks, reviewer prompt.
 - [e2e-scope-discovery.md](e2e-scope-discovery.md): how to infer upstream/downstream scope and choose a minimal realistic E2E slice.
 - [user-flow-evidence.md](user-flow-evidence.md): browser UI / Network / user-path validation gate.
+- [external-review.md](external-review.md): optional integration with separate review skills or tools such as code-review-skill and open-code-review.
 - [outcomes.md](outcomes.md): outcome/rubric style autonomous loops.
 - [examples.md](examples.md): filled examples and anti-patterns.
 
@@ -23,6 +24,7 @@ Lightweight loop-engineering workflow. Preserve intent, reduce scope drift, impl
 - **User path beats programmatic shortcuts.** If a defect came from browser UI, modal, wizard, form, selector, button, screenshot, or browser Network, curl/hooks/Python/API seeding are diagnosis/setup only. Final PASS requires browser-driven evidence from the same user entry path unless the user explicitly waives it.
 - **Root cause over band-aids.** A fix that only hides a symptom is incomplete. Reproduce the failure, identify the owning layer, fix the owning layer, and add regression evidence.
 - **Repeatability over local heroics.** Temporary scripts, remote-host edits, patch files, YAML/Python changes, deployment tweaks, and copied bundle edits must be captured in the repo or declared as non-repeatable risk.
+- **External review is advisory, not a substitute.** Extra reviewers/tools can catch code issues, but they do not replace Goal Contract, E2E scope, user-flow, root-cause, persistence, or mechanical gates.
 - **Source truth over patch stacks.** If editable source exists, change the source/template/generator/chart/package input, not only generated output or runtime state.
 - **More context, less control.** Give rich context and strong verification instead of rigid multi-tool chains.
 - **One strong workflow, not stitched tools.** Prefer fewer contexts, fewer subagents, smaller diffs, and stronger gates.
@@ -33,6 +35,7 @@ Lightweight loop-engineering workflow. Preserve intent, reduce scope drift, impl
 - For S2/S3, Docker/platform, deployment, remote-host, data, security, or `repair` tasks: read relevant sections of `reference.md` before final verification.
 - For feature work with browser/product E2E expectations, changed UI/API integration, or unclear upstream/downstream impact: read `e2e-scope-discovery.md` before finalizing the Goal Contract.
 - For any browser UI, modal, wizard, form, selector, button, screenshot, or browser Network request: read `user-flow-evidence.md` before writing the Goal Contract and before final verification.
+- For optional external/fresh code review using another skill or tool: read `external-review.md` before running it and before applying any suggested fix.
 - For autonomous loops, `execute`, `repair`, `review`, `persist`, or ambiguous done-state: read `outcomes.md` and use an Outcome Snapshot.
 - Read `examples.md` when unsure how to fill a template.
 
@@ -47,7 +50,7 @@ User request arrives
 ├─ Important choices open? → Grill one question at a time
 ├─ S1+ → Draft Goal Contract + Outcome Snapshot
 ├─ Contract approved? → Plan → Implement in slices → Verify gates
-├─ S2/S3/high risk → Fresh Review / outcome evaluation
+├─ S2/S3/high risk → Fresh Review / outcome evaluation; optional external review if useful
 └─ New requirement mid-run? → Record as Follow-up unless user reopens scope
 ```
 
@@ -57,8 +60,8 @@ User request arrives
 |-------|-------------|---------|
 | **S0** trivial | One-file, low-risk edit | Skip to implementation. No contract needed. |
 | **S1** normal | Feature/fix with tests, limited files, low blast radius | Lightweight Goal Contract + Outcome Snapshot. If user-visible behavior changes, include a small E2E Impact Map. |
-| **S2** risky | Auth, payment, data migration, concurrency, security, public API, Docker/build/deploy, remote host changes, third-party image/platform, multi-service behavior, browser UI/user-path/Network defect | Full Goal Contract + risk list + outcome rubric + verification loop. UI issues require E2E Scope Discovery and User-Flow Evidence Gate. |
-| **S3** architectural | Changes boundaries, contracts, storage model, service topology, or major subsystem behavior | Design review before implementation. Split into chained S1/S2 outcomes. |
+| **S2** risky | Auth, payment, data migration, concurrency, security, public API, Docker/build/deploy, remote host changes, third-party image/platform, multi-service behavior, browser UI/user-path/Network defect | Full Goal Contract + risk list + outcome rubric + verification loop. UI issues require E2E Scope Discovery and User-Flow Evidence Gate. Optional external review can be used for large/risky diffs. |
+| **S3** architectural | Changes boundaries, contracts, storage model, service topology, or major subsystem behavior | Design review before implementation. Split into chained S1/S2 outcomes. Use external review only as advisory evidence. |
 
 If the task touches data, security, deploy, Docker/platform, public API, remote hosts, multi-service behavior, or browser user flows, escalate to S2+.
 
@@ -136,6 +139,7 @@ For S1+ tasks, define an Outcome Snapshot before implementation:
 - R-USERFLOW: For UI/browser defects, user path evidence exists from the same entry point.
 - R-RC: For repair tasks, root cause is identified, owning layer fixed, and regression evidence exists.
 - R-PERSIST: Temporary/manual/remote/deployment changes are repo-tracked or documented as one-off risk.
+- R-EXTREVIEW: External review findings, if run, are classified and only evidence-backed blocking findings affect PASS.
 - R-SCOPE: Diff stays within approved boundaries.
 
 ## Max iterations
@@ -186,7 +190,16 @@ For Docker/build/deployment/multi-architecture tasks, classify as S2+.
 - Never rewrite, retag, rebuild, emulate, or convert a third-party image to pretend it supports another architecture.
 - Never silently change third-party registry, tag, digest, platform, or base image to make verification pass.
 
-### 10. Fail Fast
+### 10. External Review Discipline
+
+External review skills/tools can be used for S2/S3, large diffs, security/data/deploy/concurrency/performance risks, or when the user asks.
+
+- External review is advisory evidence; loop-verify gates remain authoritative.
+- Do not auto-apply external review fixes unless the user explicitly asked for review-and-fix.
+- Classify findings as High/Medium/Low and discard weak nits from final blocking status.
+- If using a CLI review tool, avoid passing secrets or private request bodies into prompts, logs, telemetry, or artifacts.
+
+### 11. Fail Fast
 
 If required information is missing or unverifiable: stop, state the blocker, give the smallest next decision needed. Never invent business behavior, patch around unknowns, or pretend verification passed.
 
@@ -288,6 +301,9 @@ After approval, produce:
 ## User-flow validation plan
 - [browser path / Playwright / Cypress / manual browser path, or N/A]
 
+## External review plan
+- [none / code-review-skill / open-code-review / other; why]
+
 ## Validation commands
 - ...
 
@@ -386,15 +402,30 @@ Programmatic shortcuts used only for setup/diagnosis: yes/no/N/A
 
 If this gate is required but missing, final status is PARTIAL or BLOCKED, not PASS.
 
-### Gate 9: Fresh Review / Outcome Evaluation
+### Gate 9: Optional External Review
 
-Use a fresh evaluator with ONLY the contract, Outcome Snapshot, final diff, verification output, E2E impact map/evidence, user-flow evidence if relevant, persistence status, and relevant architecture constraints. Do not include implementer self-justification or previous reviewer conclusions.
+Use only when required by the contract/rubric, useful for risk, or requested by the user. Read `external-review.md` first.
+
+```text
+External tool/skill used: none/code-review-skill/open-code-review/other
+Scope reviewed: working copy/commit/branch/PR
+High findings accepted: [list]
+Medium findings accepted: [list]
+Findings rejected and why: [list]
+Auto-fixes applied: yes/no
+```
+
+External review can move status to NEEDS_REVISION if it finds evidence-backed blocking issues. External review cannot make a task PASS when E2E/user-flow/root-cause/persistence gates are missing.
+
+### Gate 10: Fresh Review / Outcome Evaluation
+
+Use a fresh evaluator with ONLY the contract, Outcome Snapshot, final diff, verification output, E2E impact map/evidence, user-flow evidence if relevant, external review summary if any, persistence status, and relevant architecture constraints. Do not include implementer self-justification or previous reviewer conclusions.
 
 ## Error Recovery
 
 When a gate fails:
 
-1. Identify root cause: code bug, test bug, contract bug, rubric bug, missing E2E slice, environment issue, user-flow evidence gap, stale remote state, or missing information.
+1. Identify root cause: code bug, test bug, contract bug, rubric bug, missing E2E slice, environment issue, user-flow evidence gap, stale remote state, external-review blocker, or missing information.
 2. Classify status: PASS / NEEDS_REVISION / PARTIAL / BLOCKED / FAILED.
 3. Fix the root cause; do not weaken tests, patch symptoms, or replace user flow with a diagnostic shortcut.
 4. Persist the durable fix.
@@ -445,6 +476,13 @@ Status: PASS / NEEDS_REVISION / PARTIAL / BLOCKED / FAILED
 - Next user action possible: yes/no/N/A
 - Programmatic shortcuts used only for setup/diagnosis: yes/no/N/A
 
+## External Review (when applicable)
+- Tool/skill used:
+- High findings accepted:
+- Medium findings accepted:
+- Findings rejected and why:
+- Auto-fixes applied:
+
 ## Diff scope
 - Changed files:
 - Out-of-scope:
@@ -461,7 +499,7 @@ Status: PASS / NEEDS_REVISION / PARTIAL / BLOCKED / FAILED
 - ...
 ```
 
-If any required command, E2E slice, or user-flow evidence was not obtained, say `NOT RUN` / `NOT VERIFIED` and explain why.
+If any required command, E2E slice, user-flow evidence, or required external review was not obtained, say `NOT RUN` / `NOT VERIFIED` and explain why.
 
 ## Special Modes
 
@@ -472,6 +510,7 @@ If any required command, E2E slice, or user-flow evidence was not obtained, say 
 | `plan` | Produce only implementation plan. No code edits. |
 | `e2e-scope` | Discover entry points, upstream prerequisites, downstream effects, and proposed E2E slice. No unrelated code edits. |
 | `user-flow` | Produce or verify browser/user-path evidence plan. No unrelated code edits. |
+| `external-review` | Plan or run optional external review using a separate review skill/tool. No auto-fixes unless requested. |
 | `execute` | Execute against an approved contract/outcome. If none exists, create one first. |
 | `outcome` | Produce or refine Outcome Snapshot and rubric only. No code edits. |
 | `review` | Evaluate diff against contract + rubric + evidence. Blocking issues only. |
@@ -485,9 +524,9 @@ If any required command, E2E slice, or user-flow evidence was not obtained, say 
 - Do not create long speculative design docs.
 - Keep contracts concise; reuse discovered repo commands.
 - For large tasks, split into chained contracts/outcomes.
-- Prefer rubric evidence, E2E scope evidence, root-cause notes, user-flow evidence, persistence status, and targeted diffs over narrative summaries.
+- Prefer rubric evidence, E2E scope evidence, root-cause notes, user-flow evidence, persistence status, external-review summary, and targeted diffs over narrative summaries.
 
-When context grows large, keep only confirmed contract + rubric + ACs + changed files + commands + failures + E2E scope + root cause + user-flow evidence + persistence status.
+When context grows large, keep only confirmed contract + rubric + ACs + changed files + commands + failures + E2E scope + root cause + user-flow evidence + persistence status + accepted external-review findings.
 
 ## Repository Knowledge
 
