@@ -9,8 +9,8 @@ A collection of installable Agent Skills for AI coding CLIs (Codex, Claude Code,
 | **[loop-verify](loop-verify/)** | Lightweight outcome/rubric verification-loop coding workflow with E2E scope discovery, root-cause, persistence, user-flow evidence, and optional external review gates | Codex project skill: `.agents/skills/loop-verify`<br>Claude user skill: `~/.claude/skills/loop-verify` |
 | **[md2docx](md2docx/)** | Markdown to Word (DOCX) converter with tables, images, CJK fonts, Mermaid | `~/.claude/skills/md2docx` or project skill directory |
 | **[zstack-gsstack-ops](zstack-gsstack-ops/)** | Sanitized GSStack/ZStack lab operations workflow for snapshot recovery, KubeKey replayability, and safe E2E verification | Codex user skill: `~/.agents/skills/zstack-gsstack-ops` |
-| **[container-e2e-browser](container-e2e-browser/)** | bb-browser automation patterns for GSStack container module E2E testing: navigation, form interaction, kubectl verification, and gotchas | Codex user skill: `~/.agents/skills/container-e2e-browser` |
-| **[container-e2e-full](container-e2e-full/)** | Step-by-step full E2E test flows for all GSStack container modules (workloads, network, storage, components, observability) with functional verification | Codex user skill: `~/.agents/skills/container-e2e-full` |
+| **[container-e2e-browser](container-e2e-browser/)** | bb-browser automation patterns for GSStack container module E2E testing: login flow, navigation, form interaction, kubectl verification, error recovery, and a complete end-to-end walkthrough | Codex user skill: `~/.agents/skills/container-e2e-browser` |
+| **[container-e2e-full](container-e2e-full/)** | Step-by-step full E2E test flows for all GSStack container modules (workloads, network, storage, RBAC, Ingress, NetworkPolicy, HPA, XSKY CSI, components, observability) with YAML templates, troubleshooting, and functional verification | Codex user skill: `~/.agents/skills/container-e2e-full` |
 
 ## Quick Install
 
@@ -93,6 +93,11 @@ ln -sfn /path/to/skills/zstack-gsstack-ops ~/.codex/skills/zstack-gsstack-ops
 
 Both skills are sanitized: image registries use `harbor.example.com` placeholders. Keep the real registry, frontend URL, admin credentials, and kubeconfig in ignored local env files (see `gsstack-local-dev` skill convention).
 
+Install the whole skill directory, not only `SKILL.md`. Each skill links to supporting files for progressive disclosure:
+
+- `container-e2e-browser` references `walkthrough.md` (complete end-to-end example) and `troubleshooting.md` (error recovery)
+- `container-e2e-full` references `yaml-templates.md` (all test resource YAMLs), `troubleshooting.md` (failure diagnosis), and `xsky-module.md` (XSKY CSI lifecycle testing)
+
 ```bash
 mkdir -p ~/.agents/skills ~/.codex/skills
 ln -sfn /path/to/skills/container-e2e-browser ~/.agents/skills/container-e2e-browser
@@ -125,9 +130,14 @@ skills/
 ├── gsstack-local-dev/
 │   └── SKILL.md
 ├── container-e2e-browser/
-│   └── SKILL.md
+│   ├── SKILL.md
+│   ├── walkthrough.md
+│   └── troubleshooting.md
 ├── container-e2e-full/
-│   └── SKILL.md
+│   ├── SKILL.md
+│   ├── yaml-templates.md
+│   ├── troubleshooting.md
+│   └── xsky-module.md
 └── md2docx/
     ├── SKILL.md
     ├── converter-template.md
