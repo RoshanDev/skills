@@ -6,7 +6,7 @@ A collection of installable Agent Skills for AI coding CLIs (Codex, Claude Code,
 
 | Skill | Description | Install path examples |
 |-------|-------------|----------------------|
-| **[loop-verify](loop-verify/)** | Lightweight outcome/rubric verification-loop coding workflow with E2E scope discovery, root-cause, persistence, user-flow evidence, and optional external review gates | Codex project skill: `.agents/skills/loop-verify`<br>Claude user skill: `~/.claude/skills/loop-verify` |
+| **[loop-verify](loop-verify/)** | Lightweight outcome/rubric verification-loop coding workflow with E2E scope discovery, long-task progress artifacts, root-cause, persistence, user-flow evidence, and optional external review gates | Codex project skill: `.agents/skills/loop-verify`<br>Claude user skill: `~/.claude/skills/loop-verify` |
 | **[md2docx](md2docx/)** | Markdown to Word (DOCX) converter with tables, images, CJK fonts, Mermaid | `~/.claude/skills/md2docx` or project skill directory |
 | **[zstack-gsstack-ops](zstack-gsstack-ops/)** | Sanitized GSStack/ZStack lab operations workflow for snapshot recovery, KubeKey replayability, and safe E2E verification | Codex user skill: `~/.agents/skills/zstack-gsstack-ops` |
 | **[container-e2e-browser](container-e2e-browser/)** | bb-browser automation patterns for GSStack container module E2E testing: login flow, navigation, form interaction, kubectl verification, error recovery, and a complete end-to-end walkthrough | Codex user skill: `~/.agents/skills/container-e2e-browser` |
@@ -43,7 +43,7 @@ For a project-local skill path, prefer the same symlink unless the project has a
 
 ### loop-verify
 
-Install the whole skill directory, not only `SKILL.md`. The skill links to `examples.md`, `reference.md`, `e2e-scope-discovery.md`, `user-flow-evidence.md`, `external-review.md`, and `outcomes.md`, so copying only the manifest will break progressive disclosure.
+Install the whole skill directory, not only `SKILL.md`. The skill links to `examples.md`, `reference.md`, `e2e-scope-discovery.md`, `user-flow-evidence.md`, `external-review.md`, `long-task-progress.md`, and `outcomes.md`, so copying only the manifest will break progressive disclosure.
 
 #### Codex project skill
 
@@ -96,7 +96,7 @@ Both skills are sanitized: image registries use `harbor.example.com` placeholder
 Install the whole skill directory, not only `SKILL.md`. Each skill links to supporting files for progressive disclosure:
 
 - `container-e2e-browser` references `walkthrough.md` (complete end-to-end example) and `troubleshooting.md` (error recovery)
-- `container-e2e-full` references `yaml-templates.md` (all test resource YAMLs), `troubleshooting.md` (failure diagnosis), and `xsky-module.md` (XSKY CSI lifecycle testing)
+- `container-e2e-full` references `yaml-templates.md` (all test resource YAMLs), `http-workload-service.md` (known-good HTTP workload + Service for curl verification), `troubleshooting.md` (failure diagnosis), and `xsky-module.md` (XSKY CSI lifecycle testing)
 
 ```bash
 mkdir -p ~/.agents/skills ~/.codex/skills
@@ -122,6 +122,7 @@ skills/
 │   ├── e2e-scope-discovery.md
 │   ├── examples.md
 │   ├── external-review.md
+│   ├── long-task-progress.md
 │   ├── outcomes.md
 │   ├── reference.md
 │   └── user-flow-evidence.md
@@ -135,6 +136,7 @@ skills/
 │   └── troubleshooting.md
 ├── container-e2e-full/
 │   ├── SKILL.md
+│   ├── http-workload-service.md
 │   ├── yaml-templates.md
 │   ├── troubleshooting.md
 │   └── xsky-module.md
@@ -150,6 +152,7 @@ skills/
 - Keep the main `SKILL.md` under control and push detailed examples/checklists/rubric patterns into supporting files.
 - Do not duplicate the same workflow across multiple tools. Prefer one owner for intent, one owner for evidence, and explicit gates for verification.
 - For coding workflows, use acceptance criteria as the contract and tests/checks as executable evidence. Do not let the implementing agent self-certify without command output, AC/rubric coverage, E2E scope evidence when relevant, user-flow evidence when relevant, and persistence status when relevant.
+- For long-running work, persist task state outside chat context using progress artifacts such as `progress.md` and `feature_list.json`.
 - For feature work, the agent should infer the E2E Impact Map from code/routes/UI/API/tests and ask only for genuinely missing business or environment decisions.
 - For UI/browser defects, curl/hooks/Python/direct API checks are diagnosis/setup evidence only. Final PASS needs browser-driven user-path evidence unless explicitly waived.
 - External review tools such as language-specific review skills or `open-code-review` are optional advisory/fresh-review inputs. They do not replace loop-verify gates.
