@@ -40,6 +40,8 @@ baseline_commit.txt  # commit SHA used as starting baseline
 session_log.md       # optional short append-only summaries
 ```
 
+Add the progress directory to `.gitignore` if it contains environment-specific or transient state. If the artifacts should be tracked (e.g., for audit), use `docs/ai/progress/` and commit them.
+
 If the repo has a convention, use it. Do not create a giant spec system.
 
 ---

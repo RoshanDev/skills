@@ -347,6 +347,7 @@ For troubleshooting common E2E failures (Pod CrashLoopBackOff, PVC stuck Pending
 ## References
 
 - [yaml-templates.md](yaml-templates.md) — All YAML templates for test resources
+- [http-workload-service.md](http-workload-service.md) — Known-good HTTP workload + Service for curl verification
 - [troubleshooting.md](troubleshooting.md) — Error handling and diagnosis
 - [xsky-module.md](xsky-module.md) — XSKY CSI install/uninstall/data-plane testing
 - `container-e2e-browser` skill — bb-browser setup, login flow, form patterns, error recovery

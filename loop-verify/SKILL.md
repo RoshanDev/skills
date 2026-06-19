@@ -14,6 +14,7 @@ Lightweight loop-engineering workflow. Preserve intent, reduce scope drift, impl
 - [user-flow-evidence.md](user-flow-evidence.md): browser UI / Network / user-path validation gate.
 - [external-review.md](external-review.md): optional integration with separate review skills or tools such as code-review-skill and open-code-review.
 - [outcomes.md](outcomes.md): outcome/rubric style autonomous loops.
+- [long-task-progress.md](long-task-progress.md): persisting task state across sessions/compactions with progress.md and feature_list.json.
 - [examples.md](examples.md): filled examples and anti-patterns.
 
 ## Core Philosophy

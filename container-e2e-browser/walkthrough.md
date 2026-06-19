@@ -4,6 +4,8 @@ This walkthrough demonstrates a full E2E test cycle: start Chrome, connect bb-br
 
 The workload intentionally uses an HTTP-serving container. Do not pair a sleeping BusyBox pod with a Service curl check; BusyBox sleep has no HTTP listener.
 
+For the standalone HTTP workload + Service template, see [container-e2e-full/http-workload-service.md](../container-e2e-full/http-workload-service.md).
+
 ## Step 1: Start Chrome and Connect bb-browser
 
 ```bash
@@ -184,6 +186,8 @@ Expected: create API calls returned success and there are no blocking frontend e
 ## Step 8: Cleanup
 
 Delete in reverse dependency order. Prefer UI cleanup when testing UI delete flows; use kubectl cleanup as a safety net.
+
+For the UI delete flow pattern (dropdown → eval click Delete → confirm), see [troubleshooting.md](troubleshooting.md) Dropdown Menu Items section.
 
 ```bash
 # Safety-net cleanup
