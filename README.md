@@ -8,6 +8,7 @@ A collection of installable Agent Skills for AI coding CLIs (Codex, Claude Code,
 |-------|-------------|----------------------|
 | **[loop-verify](loop-verify/)** | Lightweight outcome/rubric verification-loop coding workflow with E2E scope discovery, long-task progress artifacts, root-cause, persistence, user-flow evidence, and optional external review gates | Codex project skill: `.agents/skills/loop-verify`<br>Claude user skill: `~/.claude/skills/loop-verify` |
 | **[md2docx](md2docx/)** | Markdown to Word (DOCX) converter with tables, images, CJK fonts, Mermaid | `~/.claude/skills/md2docx` or project skill directory |
+| **[xquik-source-research](xquik-source-research/)** | Source-backed X/Twitter research workflow using Xquik API evidence logs, citations, and sample caveats | Codex project skill: `.agents/skills/xquik-source-research`<br>Claude user skill: `~/.claude/skills/xquik-source-research` |
 | **[zstack-gsstack-ops](zstack-gsstack-ops/)** | Sanitized GSStack/ZStack lab operations workflow for snapshot recovery, KubeKey replayability, and safe E2E verification | Codex user skill: `~/.agents/skills/zstack-gsstack-ops` |
 | **[ssh-reuse](ssh-reuse/)** | Reusable OpenSSH operations with ControlMaster/ControlPersist, ssh-agent key auth, ProxyJump, tmux sessions, resumable transfer, batch commands, server-to-server copy, and tunnels | Codex user skill: `~/.agents/skills/ssh-reuse` |
 | **[container-e2e-browser](container-e2e-browser/)** | bb-browser automation patterns for GSStack container module E2E testing: login flow, navigation, form interaction, kubectl verification, error recovery, and a complete end-to-end walkthrough | Codex user skill: `~/.agents/skills/container-e2e-browser` |
@@ -32,6 +33,8 @@ Replace `/path/to/skills` with your local clone path, for example `$HOME/Develop
 mkdir -p ~/.agents/skills ~/.codex/skills
 ln -sfn /path/to/skills/loop-verify ~/.agents/skills/loop-verify
 ln -sfn /path/to/skills/loop-verify ~/.codex/skills/loop-verify
+ln -sfn /path/to/skills/xquik-source-research ~/.agents/skills/xquik-source-research
+ln -sfn /path/to/skills/xquik-source-research ~/.codex/skills/xquik-source-research
 ln -sfn /path/to/skills/zstack-gsstack-ops ~/.agents/skills/zstack-gsstack-ops
 ln -sfn /path/to/skills/zstack-gsstack-ops ~/.codex/skills/zstack-gsstack-ops
 ln -sfn /path/to/skills/ssh-reuse ~/.agents/skills/ssh-reuse
@@ -126,6 +129,16 @@ cd md2docx
 ./install.sh
 ```
 
+### xquik-source-research
+
+Install the whole skill directory:
+
+```bash
+mkdir -p ~/.agents/skills ~/.codex/skills
+ln -sfn /path/to/skills/xquik-source-research ~/.agents/skills/xquik-source-research
+ln -sfn /path/to/skills/xquik-source-research ~/.codex/skills/xquik-source-research
+```
+
 ## Directory Structure
 
 ```text
@@ -160,6 +173,8 @@ skills/
 │   ├── yaml-templates.md
 │   ├── troubleshooting.md
 │   └── xsky-module.md
+├── xquik-source-research/
+│   └── SKILL.md
 └── md2docx/
     ├── SKILL.md
     ├── converter-template.md
