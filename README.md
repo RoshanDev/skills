@@ -9,6 +9,7 @@ A collection of installable Agent Skills for AI coding CLIs (Codex, Claude Code,
 | **[loop-verify](loop-verify/)** | Lightweight outcome/rubric verification-loop coding workflow with E2E scope discovery, long-task progress artifacts, root-cause, persistence, user-flow evidence, and optional external review gates | Codex project skill: `.agents/skills/loop-verify`<br>Claude user skill: `~/.claude/skills/loop-verify` |
 | **[md2docx](md2docx/)** | Markdown to Word (DOCX) converter with tables, images, CJK fonts, Mermaid | `~/.claude/skills/md2docx` or project skill directory |
 | **[zstack-gsstack-ops](zstack-gsstack-ops/)** | Sanitized GSStack/ZStack lab operations workflow for snapshot recovery, KubeKey replayability, and safe E2E verification | Codex user skill: `~/.agents/skills/zstack-gsstack-ops` |
+| **[ssh-reuse](ssh-reuse/)** | Reusable OpenSSH operations with ControlMaster/ControlPersist, ssh-agent key auth, ProxyJump, tmux sessions, resumable transfer, batch commands, server-to-server copy, and tunnels | Codex user skill: `~/.agents/skills/ssh-reuse` |
 | **[container-e2e-browser](container-e2e-browser/)** | bb-browser automation patterns for GSStack container module E2E testing: login flow, navigation, form interaction, kubectl verification, error recovery, and a complete end-to-end walkthrough | Codex user skill: `~/.agents/skills/container-e2e-browser` |
 | **[container-e2e-full](container-e2e-full/)** | Step-by-step full E2E test flows for all GSStack container modules (workloads, network, storage, RBAC, Ingress, NetworkPolicy, HPA, XSKY CSI, components, observability) with YAML templates, troubleshooting, and functional verification | Codex user skill: `~/.agents/skills/container-e2e-full` |
 
@@ -33,6 +34,8 @@ ln -sfn /path/to/skills/loop-verify ~/.agents/skills/loop-verify
 ln -sfn /path/to/skills/loop-verify ~/.codex/skills/loop-verify
 ln -sfn /path/to/skills/zstack-gsstack-ops ~/.agents/skills/zstack-gsstack-ops
 ln -sfn /path/to/skills/zstack-gsstack-ops ~/.codex/skills/zstack-gsstack-ops
+ln -sfn /path/to/skills/ssh-reuse ~/.agents/skills/ssh-reuse
+ln -sfn /path/to/skills/ssh-reuse ~/.codex/skills/ssh-reuse
 ln -sfn /path/to/skills/container-e2e-browser ~/.agents/skills/container-e2e-browser
 ln -sfn /path/to/skills/container-e2e-browser ~/.codex/skills/container-e2e-browser
 ln -sfn /path/to/skills/container-e2e-full ~/.agents/skills/container-e2e-full
@@ -89,6 +92,16 @@ ln -sfn /path/to/skills/zstack-gsstack-ops ~/.agents/skills/zstack-gsstack-ops
 ln -sfn /path/to/skills/zstack-gsstack-ops ~/.codex/skills/zstack-gsstack-ops
 ```
 
+### ssh-reuse
+
+Use this skill for repeated SSH debugging through OpenSSH host aliases, `ssh-agent`, `ControlMaster`, `ControlPersist`, `ProxyJump`, tmux sessions, resumable transfer, batch commands, server-to-server copy, and local tunnels. Keep real server details in `~/.ssh/config` or `~/.ssh/servers.d/*.conf`, not in this public repository.
+
+```bash
+mkdir -p ~/.agents/skills ~/.codex/skills
+ln -sfn /path/to/skills/ssh-reuse ~/.agents/skills/ssh-reuse
+ln -sfn /path/to/skills/ssh-reuse ~/.codex/skills/ssh-reuse
+```
+
 ### container-e2e-browser / container-e2e-full
 
 Both skills are sanitized: image registries use `harbor.example.com` placeholders. Keep the real registry, frontend URL, admin credentials, and kubeconfig in ignored local env files (see `gsstack-local-dev` skill convention).
@@ -128,6 +141,13 @@ skills/
 │   └── user-flow-evidence.md
 ├── zstack-gsstack-ops/
 │   └── SKILL.md
+├── ssh-reuse/
+│   ├── SKILL.md
+│   ├── config-guide.md
+│   ├── commands.md
+│   ├── troubleshooting.md
+│   └── scripts/
+│       └── sshx
 ├── gsstack-local-dev/
 │   └── SKILL.md
 ├── container-e2e-browser/

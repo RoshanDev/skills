@@ -1,0 +1,346 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+CM_DIR="${HOME}/.ssh/cm"
+mkdir -p "$CM_DIR"
+chmod 700 "$CM_DIR" 2>/dev/null || true
+
+usage() {
+  cat <<'EOF'
+Usage:
+  sshx check <host>
+  sshx warm <host>
+  sshx run <host> <command...>
+  sshx shell <host>
+  sshx upload <host> <local> <remote>
+  sshx download <host> <remote> <local>
+  sshx sync-up <host> <local> <remote>
+  sshx sync-down <host> <remote> <local>
+  sshx copy <src_host> <src_path> <dst_host> <dst_path>
+  sshx batch <hosts_file> <command...>
+  sshx tunnel <host> <local_port> <remote_host:remote_port>
+  sshx tunnel-stop <host> <local_port> <remote_host:remote_port>
+  sshx tmux-start <host> <session>
+  sshx tmux-run <host> <session> <command...>
+  sshx tmux-capture <host> <session> [lines]
+  sshx agent-check
+  sshx close <host>
+  sshx close-all
+  sshx config <host>
+  sshx list
+
+Notes:
+  - Hosts are OpenSSH Host aliases from ~/.ssh/config or ~/.ssh/servers.d/*.conf.
+  - Real IPs, passwords, private keys, tokens, cookies, and kubeconfigs must not be committed.
+EOF
+}
+
+need_host() {
+  if [[ $# -lt 1 ]]; then
+    echo "missing host alias" >&2
+    usage
+    exit 2
+  fi
+}
+
+need_command() {
+  if ! command -v "$1" >/dev/null 2>&1; then
+    echo "missing command: $1" >&2
+    exit 127
+  fi
+}
+
+quote() {
+  printf '%q' "$1"
+}
+
+need_tmux_session() {
+  case "$1" in
+    ""|*[!A-Za-z0-9_.-]*)
+      echo "invalid tmux session name: $1" >&2
+      echo "allowed: letters, digits, underscore, dot, hyphen" >&2
+      exit 2
+      ;;
+  esac
+}
+
+cmd="${1:-}"
+shift || true
+
+SSH_BASE_OPTS=(
+  -o BatchMode=yes
+  -o ConnectTimeout=10
+)
+
+SSH_RSYNC="ssh -o BatchMode=yes -o ConnectTimeout=10"
+
+case "$cmd" in
+  check)
+    need_host "$@"
+    host="$1"
+    ssh -O check "$host" 2>/dev/null || {
+      echo "no active master connection for $host" >&2
+      exit 1
+    }
+    ;;
+
+  warm)
+    need_host "$@"
+    host="$1"
+    if ssh -O check "$host" >/dev/null 2>&1; then
+      echo "master already active: $host"
+      exit 0
+    fi
+    ssh "${SSH_BASE_OPTS[@]}" -MNf "$host"
+    ssh -O check "$host"
+    ;;
+
+  run)
+    need_host "$@"
+    host="$1"
+    shift
+    if [[ $# -lt 1 ]]; then
+      echo "missing remote command" >&2
+      exit 2
+    fi
+    # shellcheck disable=SC2029
+    ssh "${SSH_BASE_OPTS[@]}" "$host" "$@"
+    ;;
+
+  shell)
+    need_host "$@"
+    host="$1"
+    ssh -t "$host"
+    ;;
+
+  upload)
+    if [[ $# -ne 3 ]]; then
+      echo "Usage: sshx upload <host> <local> <remote>" >&2
+      exit 2
+    fi
+    host="$1"
+    local_path="$2"
+    remote_path="$3"
+    scp "${SSH_BASE_OPTS[@]}" -r "$local_path" "${host}:${remote_path}"
+    ;;
+
+  download)
+    if [[ $# -ne 3 ]]; then
+      echo "Usage: sshx download <host> <remote> <local>" >&2
+      exit 2
+    fi
+    host="$1"
+    remote_path="$2"
+    local_path="$3"
+    scp "${SSH_BASE_OPTS[@]}" -r "${host}:${remote_path}" "$local_path"
+    ;;
+
+  sync-up)
+    if [[ $# -ne 3 ]]; then
+      echo "Usage: sshx sync-up <host> <local> <remote>" >&2
+      exit 2
+    fi
+    need_command rsync
+    host="$1"
+    local_path="$2"
+    remote_path="$3"
+    rsync -azP --partial --human-readable -e "$SSH_RSYNC" "$local_path" "${host}:${remote_path}"
+    ;;
+
+  sync-down)
+    if [[ $# -ne 3 ]]; then
+      echo "Usage: sshx sync-down <host> <remote> <local>" >&2
+      exit 2
+    fi
+    need_command rsync
+    host="$1"
+    remote_path="$2"
+    local_path="$3"
+    rsync -azP --partial --human-readable -e "$SSH_RSYNC" "${host}:${remote_path}" "$local_path"
+    ;;
+
+  copy)
+    if [[ $# -ne 4 ]]; then
+      echo "Usage: sshx copy <src_host> <src_path> <dst_host> <dst_path>" >&2
+      exit 2
+    fi
+    src_host="$1"
+    src_path="$2"
+    dst_host="$3"
+    dst_path="$4"
+    src_path_q="$(quote "$src_path")"
+    dst_target_q="$(quote "${dst_host}:${dst_path}")"
+    # shellcheck disable=SC2029
+    ssh "${SSH_BASE_OPTS[@]}" "$src_host" "scp -r -- $src_path_q $dst_target_q"
+    ;;
+
+  batch)
+    if [[ $# -lt 2 ]]; then
+      echo "Usage: sshx batch <hosts_file> <command...>" >&2
+      exit 2
+    fi
+    hosts_file="$1"
+    shift
+    if [[ ! -r "$hosts_file" ]]; then
+      echo "cannot read hosts file: $hosts_file" >&2
+      exit 2
+    fi
+    status=0
+    while IFS= read -r line || [[ -n "$line" ]]; do
+      [[ "$line" =~ ^[[:space:]]*($|#) ]] && continue
+      read -r host _ <<< "${line%%#*}"
+      [[ -z "${host:-}" ]] && continue
+      echo "==> $host"
+      if ssh -n "${SSH_BASE_OPTS[@]}" "$host" "$@"; then
+        :
+      else
+        rc=$?
+        status=$rc
+        echo "failed: $host ($rc)" >&2
+      fi
+    done < "$hosts_file"
+    exit "$status"
+    ;;
+
+  tunnel)
+    if [[ $# -ne 3 ]]; then
+      echo "Usage: sshx tunnel <host> <local_port> <remote_host:remote_port>" >&2
+      exit 2
+    fi
+    host="$1"
+    local_port="$2"
+    remote="$3"
+    ssh "${SSH_BASE_OPTS[@]}" -fN \
+      -o ExitOnForwardFailure=yes \
+      -L "127.0.0.1:${local_port}:${remote}" \
+      "$host"
+    echo "tunnel ready: 127.0.0.1:${local_port} -> ${host}:${remote}"
+    ;;
+
+  tunnel-stop)
+    if [[ $# -ne 3 ]]; then
+      echo "Usage: sshx tunnel-stop <host> <local_port> <remote_host:remote_port>" >&2
+      exit 2
+    fi
+    host="$1"
+    local_port="$2"
+    remote="$3"
+    ssh -O cancel -L "127.0.0.1:${local_port}:${remote}" "$host"
+    ;;
+
+  tmux-start)
+    if [[ $# -ne 2 ]]; then
+      echo "Usage: sshx tmux-start <host> <session>" >&2
+      exit 2
+    fi
+    host="$1"
+    session="$2"
+    need_tmux_session "$session"
+    session_q="$(quote "$session")"
+    # shellcheck disable=SC2029
+    ssh "${SSH_BASE_OPTS[@]}" "$host" "command -v tmux >/dev/null || { echo 'missing remote command: tmux' >&2; exit 127; }; tmux new-session -Ad -s $session_q; tmux display-message -p -t $session_q 'tmux ready: #{session_name}'"
+    ;;
+
+  tmux-run)
+    if [[ $# -lt 3 ]]; then
+      echo "Usage: sshx tmux-run <host> <session> <command...>" >&2
+      exit 2
+    fi
+    host="$1"
+    session="$2"
+    shift 2
+    need_tmux_session "$session"
+    remote_cmd="$*"
+    session_q="$(quote "$session")"
+    remote_cmd_q="$(quote "$remote_cmd")"
+    # shellcheck disable=SC2029
+    ssh "${SSH_BASE_OPTS[@]}" "$host" "command -v tmux >/dev/null || { echo 'missing remote command: tmux' >&2; exit 127; }; tmux new-session -Ad -s $session_q; tmux send-keys -t $session_q -- $remote_cmd_q C-m; tmux display-message -p -t $session_q 'sent to #{session_name}'"
+    ;;
+
+  tmux-capture)
+    if [[ $# -lt 2 || $# -gt 3 ]]; then
+      echo "Usage: sshx tmux-capture <host> <session> [lines]" >&2
+      exit 2
+    fi
+    host="$1"
+    session="$2"
+    lines="${3:-80}"
+    need_tmux_session "$session"
+    if [[ ! "$lines" =~ ^[0-9]+$ || "$lines" -lt 1 ]]; then
+      echo "lines must be a positive integer" >&2
+      exit 2
+    fi
+    session_q="$(quote "$session")"
+    # shellcheck disable=SC2029
+    ssh "${SSH_BASE_OPTS[@]}" "$host" "command -v tmux >/dev/null || { echo 'missing remote command: tmux' >&2; exit 127; }; tmux capture-pane -pt $session_q -S -$lines"
+    ;;
+
+  agent-check)
+    need_command ssh-add
+    if ssh-add -l; then
+      exit 0
+    fi
+    rc=$?
+    cat >&2 <<'EOF'
+ssh-agent is unavailable or has no loaded identities.
+
+Linux/WSL:
+  eval "$(ssh-agent -s)"
+  ssh-add ~/.ssh/keys/<key>
+  ssh-add -l
+
+Windows OpenSSH agent:
+  Get-Service ssh-agent
+  Set-Service -Name ssh-agent -StartupType Automatic
+  Start-Service ssh-agent
+  ssh-add $env:USERPROFILE\.ssh\keys\<key>
+  ssh-add -l
+EOF
+    exit "$rc"
+    ;;
+
+  close)
+    need_host "$@"
+    host="$1"
+    ssh -O exit "$host" 2>/dev/null || true
+    ;;
+
+  close-all)
+    find "$CM_DIR" -maxdepth 1 -type s -print -delete 2>/dev/null || true
+    ;;
+
+  config)
+    need_host "$@"
+    host="$1"
+    ssh -G "$host" | sed -n \
+      -e '/^hostname /p' \
+      -e '/^user /p' \
+      -e '/^port /p' \
+      -e '/^identityfile /p' \
+      -e '/^identitiesonly /p' \
+      -e '/^proxyjump /p' \
+      -e '/^controlmaster /p' \
+      -e '/^controlpath /p' \
+      -e '/^controlpersist /p'
+    ;;
+
+  list)
+    awk '
+      /^[[:space:]]*Host[[:space:]]+/ {
+        for (i = 2; i <= NF; i++) {
+          if ($i !~ /[*?]/) print $i
+        }
+      }
+    ' ~/.ssh/config ~/.ssh/servers.d/*.conf 2>/dev/null | sort -u
+    ;;
+
+  ""|-h|--help|help)
+    usage
+    ;;
+
+  *)
+    echo "unknown command: $cmd" >&2
+    usage
+    exit 2
+    ;;
+esac
