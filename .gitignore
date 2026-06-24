@@ -5,3 +5,7 @@ node_modules/
 .vscode/
 .idea/
 .omx/
+
+# Transient agent progress/state artifacts.
+# Audit-worthy progress should live under docs/ai/progress/ and be committed intentionally.
+.agent-progress/
