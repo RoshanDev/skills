@@ -1,0 +1,49 @@
+# Recommended default: package by bounded context / business capability first.
+
+.
+├── go.mod
+├── cmd/
+│   ├── api/
+│   │   └── main.go
+│   └── worker/
+│       └── main.go
+├── internal/
+│   ├── ordering/
+│   │   ├── domain/
+│   │   │   ├── order.go
+│   │   │   ├── money.go
+│   │   │   └── event.go
+│   │   ├── app/
+│   │   │   ├── place_order.go
+│   │   │   ├── get_order.go
+│   │   │   └── ports.go
+│   │   ├── adapters/
+│   │   │   ├── postgres/
+│   │   │   ├── http/
+│   │   │   └── messaging/
+│   │   └── module.go
+│   ├── inventory/
+│   │   └── ...
+│   └── platform/
+│       ├── clock/
+│       ├── observability/
+│       └── postgres/
+├── migrations/
+└── tests/
+
+Dependency direction:
+
+  adapters ---> app ---> domain
+      ^          |
+      |          v (ports declared by consumer)
+      +--- concrete implementations
+
+Do not create global business junk drawers such as:
+
+  internal/models
+  internal/entities
+  internal/repositories
+  internal/services
+  internal/utils
+  internal/common
+  internal/events

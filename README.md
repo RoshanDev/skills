@@ -7,6 +7,7 @@ A collection of installable Agent Skills for AI coding CLIs (Codex, Claude Code,
 | Skill | Description | Install path examples |
 |-------|-------------|----------------------|
 | **[loop-verify](loop-verify/)** | Lightweight outcome/rubric verification-loop coding workflow with E2E scope discovery, long-task progress artifacts, root-cause, persistence, user-flow evidence, and optional external review gates | Codex project skill: `.agents/skills/loop-verify`<br>Claude user skill: `~/.claude/skills/loop-verify` |
+| **[golang-ddd](golang-ddd/)** | Chinese-language Go DDD design, implementation, refactoring, and review guidance covering strategic/tactical modeling, clean boundaries, repositories, transactions, outbox, idempotency, CQRS, testing, and pragmatic complexity control | Codex/Agent user skill: `~/.agents/skills/golang-ddd`<br>Project skill: `.agents/skills/golang-ddd` |
 | **[md2docx](md2docx/)** | Markdown to Word (DOCX) converter with tables, images, CJK fonts, Mermaid | `~/.claude/skills/md2docx` or project skill directory |
 | **[zstack-gsstack-ops](zstack-gsstack-ops/)** | Sanitized GSStack/ZStack lab operations workflow for snapshot recovery, KubeKey replayability, and safe E2E verification | Codex user skill: `~/.agents/skills/zstack-gsstack-ops` |
 | **[ssh-reuse](ssh-reuse/)** | Reusable OpenSSH operations with ControlMaster/ControlPersist, ssh-agent key auth, ProxyJump, tmux sessions, resumable transfer, batch commands, server-to-server copy, and tunnels | Codex user skill: `~/.agents/skills/ssh-reuse` |
@@ -32,6 +33,8 @@ Replace `/path/to/skills` with your local clone path, for example `$HOME/Develop
 mkdir -p ~/.agents/skills ~/.codex/skills
 ln -sfn /path/to/skills/loop-verify ~/.agents/skills/loop-verify
 ln -sfn /path/to/skills/loop-verify ~/.codex/skills/loop-verify
+ln -sfn /path/to/skills/golang-ddd ~/.agents/skills/golang-ddd
+ln -sfn /path/to/skills/golang-ddd ~/.codex/skills/golang-ddd
 ln -sfn /path/to/skills/zstack-gsstack-ops ~/.agents/skills/zstack-gsstack-ops
 ln -sfn /path/to/skills/zstack-gsstack-ops ~/.codex/skills/zstack-gsstack-ops
 ln -sfn /path/to/skills/ssh-reuse ~/.agents/skills/ssh-reuse
@@ -82,6 +85,31 @@ mkdir -p ~/.qoderwork/skills
 ln -sfn /path/to/skills/loop-verify ~/.qoderwork/skills/loop-verify
 ```
 
+### golang-ddd
+
+Install the whole directory because the main manifest progressively loads the reference guides, templates, validation scripts, and compilable order example.
+
+```bash
+mkdir -p ~/.agents/skills ~/.codex/skills
+ln -sfn /path/to/skills/golang-ddd ~/.agents/skills/golang-ddd
+ln -sfn /path/to/skills/golang-ddd ~/.codex/skills/golang-ddd
+```
+
+For a project-local installation:
+
+```bash
+mkdir -p .agents/skills
+ln -sfn /path/to/skills/golang-ddd .agents/skills/golang-ddd
+```
+
+Validate the skill and its example from the repository root:
+
+```bash
+python3 golang-ddd/scripts/validate_skill.py golang-ddd
+python3 golang-ddd/scripts/check_domain_imports.py golang-ddd/examples/order
+(cd golang-ddd/examples/order && go test -race ./...)
+```
+
 ### zstack-gsstack-ops
 
 The public skill is intentionally sanitized. Keep lab endpoints, private IDs, credentials, and private environment details in ignored local files or project-private documentation only.
@@ -130,6 +158,13 @@ cd md2docx
 
 ```text
 skills/
+├── golang-ddd/
+│   ├── SKILL.md
+│   ├── README.md
+│   ├── assets/
+│   ├── examples/order/
+│   ├── references/
+│   └── scripts/
 ├── loop-verify/
 │   ├── SKILL.md
 │   ├── e2e-scope-discovery.md
