@@ -9,6 +9,7 @@ A collection of installable Agent Skills for AI coding CLIs (Codex, Claude Code,
 | **[loop-verify](loop-verify/)** | Lightweight outcome/rubric verification-loop coding workflow with E2E scope discovery, long-task progress artifacts, root-cause, persistence, user-flow evidence, and optional external review gates | Codex project skill: `.agents/skills/loop-verify`<br>Claude user skill: `~/.claude/skills/loop-verify` |
 | **[golang-ddd](golang-ddd/)** | Chinese-language Go DDD design, implementation, refactoring, and review guidance covering strategic/tactical modeling, clean boundaries, repositories, transactions, outbox, idempotency, CQRS, testing, and pragmatic complexity control | Codex/Agent user skill: `~/.agents/skills/golang-ddd`<br>Project skill: `.agents/skills/golang-ddd` |
 | **[md2docx](md2docx/)** | Markdown to Word (DOCX) converter with tables, images, CJK fonts, Mermaid | `~/.claude/skills/md2docx` or project skill directory |
+| **[confluence-publish](confluence-publish/)** | Publish local HTML files to Confluence 6.x wiki pages via browser automation (agent-browser + Chrome CDP), with HTML simplification, Unicode sanitization, TinyMCE injection, and optional one-click REST API publish | Codex/Agent user skill: `~/.agents/skills/confluence-publish` |
 | **[zstack-gsstack-ops](zstack-gsstack-ops/)** | Sanitized GSStack/ZStack lab operations workflow for snapshot recovery, KubeKey replayability, and safe E2E verification | Codex user skill: `~/.agents/skills/zstack-gsstack-ops` |
 | **[ssh-reuse](ssh-reuse/)** | Reusable OpenSSH operations with ControlMaster/ControlPersist, ssh-agent key auth, ProxyJump, tmux sessions, resumable transfer, batch commands, server-to-server copy, and tunnels | Codex user skill: `~/.agents/skills/ssh-reuse` |
 | **[container-e2e-browser](container-e2e-browser/)** | bb-browser automation patterns for GSStack container module E2E testing: login flow, navigation, form interaction, kubectl verification, error recovery, and a complete end-to-end walkthrough | Codex user skill: `~/.agents/skills/container-e2e-browser` |
@@ -43,6 +44,8 @@ ln -sfn /path/to/skills/container-e2e-browser ~/.agents/skills/container-e2e-bro
 ln -sfn /path/to/skills/container-e2e-browser ~/.codex/skills/container-e2e-browser
 ln -sfn /path/to/skills/container-e2e-full ~/.agents/skills/container-e2e-full
 ln -sfn /path/to/skills/container-e2e-full ~/.codex/skills/container-e2e-full
+ln -sfn /path/to/skills/confluence-publish ~/.agents/skills/confluence-publish
+ln -sfn /path/to/skills/confluence-publish ~/.codex/skills/confluence-publish
 ```
 
 For a project-local skill path, prefer the same symlink unless the project has a genuinely different contract. If a project copy is modified, merge the reusable part back here before relying on it.
@@ -154,6 +157,16 @@ cd md2docx
 ./install.sh
 ```
 
+### confluence-publish
+
+Install the whole skill directory. The scripts need `powershell.exe` (WSL), Windows Chrome, `agent-browser` on Windows PATH, and `beautifulsoup4`.
+
+```bash
+mkdir -p ~/.agents/skills ~/.codex/skills
+ln -sfn /path/to/skills/confluence-publish ~/.agents/skills/confluence-publish
+ln -sfn /path/to/skills/confluence-publish ~/.codex/skills/confluence-publish
+```
+
 ## Directory Structure
 
 ```text
@@ -200,6 +213,12 @@ skills/
     ├── converter-template.md
     ├── install.sh / install.ps1
     └── examples/
+├── confluence-publish/
+│   ├── SKILL.md
+│   ├── troubleshooting.md
+│   └── scripts/
+│       ├── publish_confluence_html.py
+│       └── check_confluence_meta.py
 ```
 
 ## Design Notes
