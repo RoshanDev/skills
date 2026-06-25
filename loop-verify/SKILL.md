@@ -14,7 +14,7 @@ Lightweight loop-engineering workflow. Preserve intent, reduce scope drift, impl
 - [user-flow-evidence.md](user-flow-evidence.md): browser UI / Network / user-path validation gate.
 - [external-review.md](external-review.md): optional integration with separate review skills or tools such as code-review-skill and open-code-review.
 - [outcomes.md](outcomes.md): outcome/rubric style autonomous loops.
-- [long-task-progress.md](long-task-progress.md): persisting task state across sessions/compactions with progress.md and feature_list.json.
+- [long-task-progress.md](long-task-progress.md): persisting task state across sessions, restarts, or handoffs with progress.md and feature_list.json.
 - [examples.md](examples.md): filled examples and anti-patterns.
 
 ## Core Philosophy
@@ -396,6 +396,20 @@ Re-run command or runbook exists: yes/no/N/A
 
 If required changes exist only in runtime/manual state, final status cannot be PASS.
 
+### Gate 7.5: GitHub Persistence Check
+
+When the user asks for commit/push, or the project requires checkpoint commits:
+
+```text
+Git status reviewed: yes/no
+Only intended paths staged: yes/no
+Commit created: yes/no/N/A
+Push completed: yes/no/N/A
+GitHub CLI checked auth/repo/PR state: yes/no/N/A
+```
+
+Use `git status`, path-limited `git add`, `git commit`, and `git push` for Git operations. Use `gh` CLI for GitHub-facing checks and actions such as `gh auth status`, `gh repo view`, `gh pr status`, `gh pr create`, and `gh pr view`. Do not put secrets in commit messages, PR bodies, command lines, or logs.
+
 ### Gate 8: User-Flow Evidence Check
 
 Required for UI/browser/user-path tasks. Read `user-flow-evidence.md`.
@@ -537,8 +551,6 @@ If any required command, E2E slice, user-flow evidence, or required external rev
 - Do not repeat expensive large-artifact compression, full hashing, or unpack/repack checks inside the development loop when targeted evidence proves the changed surface.
 - For large tasks, split into chained contracts/outcomes.
 - Prefer rubric evidence, E2E scope evidence, root-cause notes, user-flow evidence, persistence status, external-review summary, and targeted diffs over narrative summaries.
-
-When context grows large, keep only confirmed contract + rubric + ACs + changed files + commands + failures + E2E scope + root cause + user-flow evidence + persistence status + accepted external-review findings.
 
 ## Repository Knowledge
 

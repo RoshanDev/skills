@@ -17,7 +17,7 @@ Use this file when:
 - the user asks for autonomous loop work
 - the task has ambiguous "done" criteria
 - the task touches deployment, remote hosts, Docker/platform, secrets, data, or multi-service behavior
-- the task may span context compaction, multiple sessions, or long-running autonomous loops
+- the task may span multiple sessions, restarts, handoffs, or long-running autonomous loops
 
 For long-running or resumable work, also use [long-task-progress.md](long-task-progress.md).
 
@@ -25,7 +25,7 @@ For long-running or resumable work, also use [long-task-progress.md](long-task-p
 
 ## Outcome Snapshot
 
-Before implementation for S1+ tasks, compress the Goal Contract into a short Outcome Snapshot.
+Before implementation for S1+ tasks, condense the Goal Contract into a short Outcome Snapshot.
 
 ```md
 # Outcome Snapshot
@@ -53,7 +53,7 @@ Before implementation for S1+ tasks, compress the Goal Contract into a short Out
 - FAILED: rubric contradicts the task or repeated repair failed
 ```
 
-Keep this short. Do not create a second long spec. The Outcome Snapshot is a compressed grading target.
+Keep this short. Do not create a second long spec. The Outcome Snapshot is a concise grading target.
 
 ---
 
@@ -107,7 +107,7 @@ The evaluator must not receive the implementer's persuasive summary. Use evidenc
 
 ## Long-Task Resume Pattern
 
-For tasks that may run across context compactions or multiple sessions:
+For tasks that may run across multiple sessions, restarts, or handoffs:
 
 ```text
 1. At start: read progress.md, feature_list.json, recent git log, and run a minimal health check.

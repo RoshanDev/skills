@@ -1,6 +1,6 @@
 # Loop Verify — Long Task Progress Artifacts
 
-Use this pattern for work that may run across multiple sessions, context compactions, agent restarts, or long autonomous loops.
+Use this pattern for work that may run across multiple sessions, agent restarts, handoffs, or long autonomous loops.
 
 Core rule:
 
@@ -18,7 +18,7 @@ Use this pattern when any of these are true:
 
 ```text
 □ Task is expected to take more than one session
-□ Context may compact or overflow
+□ Session state may be lost due to restart, interruption, or handoff
 □ Multiple features/subtasks must be completed and verified
 □ Agent may crash/restart or be replaced by another agent
 □ User wants sleep-after-work / autonomous loop behavior
@@ -128,9 +128,9 @@ At the end of every session:
 
 ---
 
-## Strategic Compaction Boundaries
+## Session Handoff Boundaries
 
-When using a chat/agent that compacts context, compact at logical boundaries:
+Do not trigger or request context shrinking, reset, or summarization from this skill. When a session naturally ends, restarts, or hands off, write durable state at logical boundaries:
 
 ```text
 □ After recon/research, before implementation
@@ -140,7 +140,7 @@ When using a chat/agent that compacts context, compact at logical boundaries:
 □ Before handing off to another agent/session
 ```
 
-Before compaction, write the durable state to progress artifacts. After compaction or restart, resume from artifacts.
+Before ending or handing off, write durable state to progress artifacts. After restart or handoff, resume from artifacts.
 
 ---
 
