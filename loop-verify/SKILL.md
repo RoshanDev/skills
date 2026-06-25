@@ -29,7 +29,16 @@ Lightweight loop-engineering workflow. Preserve intent, reduce scope drift, impl
 - **Source truth over patch stacks.** If editable source exists, change the source/template/generator/chart/package input, not only generated output or runtime state.
 - **More context, less control.** Give rich context and strong verification instead of rigid multi-tool chains.
 - **One strong workflow, not stitched tools.** Prefer fewer contexts, fewer subagents, smaller diffs, and stronger gates.
+- **Current authority first.** The current worktree, selected branch, and live external state are the authority. Plans, memory, progress files, and summaries are background until current evidence confirms them.
 - **Spec is a spectrum.** Match spec weight to task complexity.
+
+## Efficiency Defaults
+
+- Start solo. Use subagents only for independent parallel research, disjoint write scopes, or isolated review.
+- For S0, skip contracts and plans. For S1, keep Goal Contract, Outcome Snapshot, and plan to the minimum needed to avoid drift; if the user explicitly asks to execute, do not pause for ritual approval.
+- Keep one durable state surface per task. Use existing progress artifacts when present; otherwise create progress files only for long-running, resumable, or multi-agent work.
+- For large artifact development loops, prefer directory handoff with manifests, size checks, and targeted checksums. Full compression, full hashing, and unpack/repack cycles belong at release/export gates or explicit ACs.
+- Treat MemOS/project memory as retrieval background. Durable workflow rules belong in the highest applicable AGENTS file or this canonical skill.
 
 ## Mandatory Supporting-File Reads
 
@@ -524,6 +533,8 @@ If any required command, E2E slice, user-flow evidence, or required external rev
 - Do not repeatedly reread the whole repository.
 - Do not create long speculative design docs.
 - Keep contracts concise; reuse discovered repo commands.
+- Do not create progress artifacts for small tasks that fit in one session.
+- Do not repeat expensive large-artifact compression, full hashing, or unpack/repack checks inside the development loop when targeted evidence proves the changed surface.
 - For large tasks, split into chained contracts/outcomes.
 - Prefer rubric evidence, E2E scope evidence, root-cause notes, user-flow evidence, persistence status, external-review summary, and targeted diffs over narrative summaries.
 
