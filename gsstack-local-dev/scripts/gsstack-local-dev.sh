@@ -208,12 +208,22 @@ ensure_nginx() {
   need docker
   write_nginx_conf
   if docker container inspect "$NGINX_CONTAINER" >/dev/null 2>&1; then
+    local published
+    published="$(docker inspect "$NGINX_CONTAINER" --format '{{json .NetworkSettings.Ports}}' | grep -c '"HostPort":"18080"' || true)"
+    if [ "$published" -eq 0 ]; then
+      local old
+      old="${NGINX_CONTAINER}-unpublished-$(date +%Y%m%d%H%M%S)"
+      docker stop "$NGINX_CONTAINER" >/dev/null 2>&1 || true
+      docker rename "$NGINX_CONTAINER" "$old"
+      log "nginx: renamed unpublished $NGINX_CONTAINER to $old"
+    else
     if [ "$(docker inspect "$NGINX_CONTAINER" --format '{{.State.Running}}')" != "true" ]; then
       docker start "$NGINX_CONTAINER" >/dev/null
     fi
     docker exec "$NGINX_CONTAINER" nginx -s reload >/dev/null 2>&1 || docker restart "$NGINX_CONTAINER" >/dev/null
     log "nginx: $NGINX_CONTAINER publishes 18080"
     return
+    fi
   fi
 
   docker run -d \
