@@ -30,6 +30,7 @@ Lightweight loop-engineering workflow. Preserve intent, reduce scope drift, impl
 - **More context, less control.** Give rich context and strong verification instead of rigid multi-tool chains.
 - **One strong workflow, not stitched tools.** Prefer fewer contexts, fewer subagents, smaller diffs, and stronger gates.
 - **Current authority first.** The current worktree, selected branch, and live external state are the authority. Plans, memory, progress files, and summaries are background until current evidence confirms them.
+- **Credential profile, not credential panic.** Default to public-safe evidence, but if the project/user marks the environment as an internal lab, use approved local private credential sources and real browser sessions instead of inventing token-injection detours.
 - **Spec is a spectrum.** Match spec weight to task complexity.
 
 ## Efficiency Defaults
@@ -96,6 +97,18 @@ Recon summary:
 
 ## Hard Rules
 
+### 0. Evidence Profile
+
+Pick the evidence profile during recon when credentials, cookies, kubeconfigs, API tokens, registry passwords, SSH credentials, or browser sessions are involved.
+
+| Profile | Use when | Credential handling |
+|---------|----------|---------------------|
+| `public-safe` | Default, public repo, shareable report, unknown environment | Use placeholders in docs/commits/finals. Do not persist real endpoints, account names, request bodies, HARs, cookies, tokens, kubeconfigs, or passwords. |
+| `internal-lab` | User/project context says the target is private lab/internal network and local private storage is allowed | Use ignored env files, private project docs, OS keychain/secret store, existing Chrome profile, Playwright storage state, cookie/session files, kubeconfigs, and test accounts. Do not waste time replacing a valid browser login with API token injection unless that is the product path under test. |
+| `trusted-lab-unredacted` | User explicitly says the lab is private and unredacted local evidence/finals/commits are acceptable | Same as `internal-lab`, and raw endpoints, account names, request bodies, screenshots, HARs, cookies, tokens, kubeconfigs, and passwords may appear in local private task notes, private repo commits, screenshots, command output, and final chat answers when that saves time or improves debugging. |
+
+`internal-lab` changes what the agent may use locally; it does not make secrets publishable. `trusted-lab-unredacted` also changes what may be preserved in private evidence. Public skills, public repos, commits meant for sharing, and shareable PR text still need placeholders or redaction unless the user explicitly says that target repository/artifact is private and unredacted is acceptable. If a command would expose a secret in argv, shell history, telemetry, or durable logs, prefer an env file, stdin, existing browser/session state, kubeconfig path, or secret-store lookup under `public-safe`/`internal-lab`; under `trusted-lab-unredacted`, use the direct path when it is faster and the output stays in the trusted lab context.
+
 ### 1. Grill Before Building
 
 For S1+ where important choices remain open:
@@ -130,6 +143,7 @@ For browser/UI/user-path issues:
 - Treat curl, hooks, Python scripts, API seeding, mocks, fake upstreams, direct DB edits, and direct backend calls as diagnosis/setup evidence only.
 - They cannot satisfy the main AC unless the user-facing product is itself an API/CLI or the user explicitly waives UI validation.
 - Final PASS requires browser-driven evidence from the same user entry point.
+- Under `internal-lab` or `trusted-lab-unredacted`, prefer real login via saved browser profile, Playwright storage state, cookie/session file, or local ignored credentials. Avoid detours that call login APIs only to inject tokens into the browser unless that is faster, already established in the repo, or specifically tests the auth mechanism.
 - Evidence must include user-visible controls interacted with, captured Network request/status when relevant, UI result/error state, and whether the next user action is possible.
 - If real login/session/environment is unavailable, final status is PARTIAL or BLOCKED, not PASS.
 

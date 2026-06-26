@@ -63,7 +63,7 @@ Run `bb-browser snap --tab <tabId> -i -c` to get a compact list of interactive e
 The number in brackets (`[1]`, `[2]`, etc.) is the `<ref>`. Pass it to `fill`, `click`, `select`, `type`, and other interaction commands:
 
 ```bash
-bb-browser type 3 "admin" --tab <tabId>      # Types "admin" into element [3]
+bb-browser type 3 "<username>" --tab <tabId> # Types a username into element [3]
 bb-browser click 5 --tab <tabId>              # Clicks element [5]
 ```
 
@@ -85,6 +85,27 @@ bb-browser snap --tab <tabId> -i -c -d 10
 
 GSStack frontend at `http://localhost:18080` requires authentication. Follow this flow after opening the frontend:
 
+### Credential Profile
+
+Default profile is `public-safe`: keep real frontend URL, username, password, cookies, session tokens, kubeconfigs, registry credentials, and API request bodies out of commits, public docs, final answers, screenshots, and HAR files.
+
+For an internal lab, use `internal-lab`: credentials may be read from ignored local env files, private project docs, an approved secret store, kubeconfig paths, existing Chrome profiles, Playwright storage state, or cookie/session files. Prefer a real saved browser login or normal UI form login. Do not spend time writing API token fetchers and browser injection scripts unless the repo already uses that pattern or the auth mechanism is the feature under test.
+
+If the user explicitly says the environment is a trusted private lab and unredacted evidence is acceptable, use `trusted-lab-unredacted`: real frontend URLs, usernames, passwords, cookies, session tokens, kubeconfigs, request bodies, screenshots, HARs, command output, private notes, private commits, and final chat answers may include raw values when that is useful. Do not redact just for ritual compliance while staying inside that trusted context.
+
+### Preferred Session Sources
+
+1. Reuse an existing Chrome `--user-data-dir` that is already logged in.
+2. Reuse Playwright/Cypress storage state or a cookie/session file from an ignored local path.
+3. Fill the login form with credentials loaded from a local ignored env file or secret store.
+4. Ask for a secure local path only if none of the above can be discovered.
+
+Never ask the user to paste passwords or tokens into chat when a local private source can be used. Under `public-safe` or `internal-lab`, do not print raw values when echoing commands or reporting evidence. Under `trusted-lab-unredacted`, raw values may be printed or reported inside the private lab context if the user authorized it.
+
+If `bb-browser type` must receive a password as an argument, that is acceptable under `internal-lab` for local form entry and under `trusted-lab-unredacted` for normal E2E operation. Keep the value sourced from a private local file/secret store when practical.
+
+### UI Login Steps
+
 ```bash
 # 1. Open frontend and capture tabId
 TAB_ID=$(bb-browser open http://localhost:18080 | grep -oP 'tabId:\s*\K\S+')
@@ -97,8 +118,9 @@ bb-browser snap --tab "$TAB_ID" -i -c
 #   [m] input#password  (or input[placeholder*="密码"])
 #   [k] button  text="Login" (or text="登录")
 
-# 3. Fill credentials using `type` (Ant Design controlled inputs)
-bb-browser type <username_ref> "admin" --tab "$TAB_ID"
+# 3. Fill credentials using `type` (Ant Design controlled inputs).
+# Load real values from an ignored env/secret source; placeholders only in docs.
+bb-browser type <username_ref> "<username>" --tab "$TAB_ID"
 bb-browser type <password_ref> "<password>" --tab "$TAB_ID"
 
 # 4. Click login button

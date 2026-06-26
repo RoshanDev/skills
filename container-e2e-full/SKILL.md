@@ -18,8 +18,16 @@ Use this skill when running comprehensive E2E testing across all GSStack contain
 - **bb-browser connected to Chrome** — see `container-e2e-browser` skill Setup section
 - **Frontend running** at `http://localhost:18080`
 - **kubectl access** to target cluster
-- **Admin credentials** for frontend login (see `gsstack-local-dev` skill for env file convention)
+- **Frontend session or admin credentials** from an approved local private source: existing Chrome profile, Playwright/Cypress storage state, ignored env file, secret store, or private project doc (see `gsstack-local-dev` skill for env file convention)
 - **gsstack-local-dev skill** — provides environment file conventions, local dev stack management, and WSL2 port proxy setup
+
+## Evidence Profile
+
+Use `public-safe` for shareable docs and commits: keep real registry, frontend URL, account names, passwords, cookies, kubeconfigs, API tokens, and request bodies out of public output.
+
+Use `internal-lab` when the user/project context says this is a private lab. In that profile, the agent may use local private env files, kubeconfigs, browser profiles, cookie/session files, and real test accounts to run E2E. Prefer normal UI login or saved browser state over API-token injection. Programmatic API calls are setup/diagnosis unless the product path under test is an API.
+
+Use `trusted-lab-unredacted` only when the user explicitly says the private lab may keep raw values in evidence. In that profile, real credentials, request bodies, screenshots, HARs, command output, private notes, private repo commits, and final chat answers may be unredacted when it improves debugging speed.
 
 ## Pre-flight Checks
 

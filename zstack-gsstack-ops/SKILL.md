@@ -9,8 +9,9 @@ Use this skill for GSStack development clusters that are recoverable through ZSt
 
 ## Non-Negotiables
 
-- Do not commit ZStack UI/API endpoints, account names, access keys, secret keys, session tokens, VM UUIDs, node passwords, registry passwords, kubeconfigs, cookies, or HAR request bodies.
-- Keep lab inventory in project-private docs, ignored local env files, secure memory, or the user's approved secret store. Public skills must use placeholders only.
+- Do not commit ZStack UI/API endpoints, account names, access keys, secret keys, session tokens, VM UUIDs, node passwords, registry passwords, kubeconfigs, cookies, or HAR request bodies to public or shareable repositories/artifacts. Private lab commits may keep raw values only under an explicit trusted-lab-unredacted profile.
+- Keep lab inventory in project-private docs, ignored local env files, secure memory, or the user's approved secret store. These sources are valid for internal lab execution; public skills, public repos, and commits/artifacts intended for sharing must use placeholders or redaction.
+- If the user explicitly selects a trusted private lab/unredacted profile, raw endpoints, credentials, request bodies, screenshots, HARs, command output, private notes, private repo commits, and final chat answers may include real values while staying inside that trusted context.
 - Destructive restore authority may come from the user or the project AGENTS. Once approved, restore the intended cluster unit directly; do not keep asking for approval inside the same approved operation.
 - Snapshot restore is recovery setup, not acceptance evidence. A dry-run is only preflight. If the dev cluster is recoverable and a component is absent, run the real install/uninstall or E2E path and verify live behavior.
 - Every successful shell, remote heredoc, ad hoc Python, Helm, kubectl patch, copied-bundle edit, or manual node edit is diagnostic until the corresponding source, template, KubeKey default, offline artifact, or runbook is updated.
@@ -38,8 +39,10 @@ If any secret or endpoint is missing, do not invent it and do not ask the user t
 
 2. **Protect secrets before commands.**
    - Use ignored env files, stdin JSON, Kubernetes Secret material, or redacted summaries.
-   - Avoid secrets in CLI argv, shell history, logs, screenshots, HAR files, plans, commits, and final answers.
-   - When browser/API payloads legitimately include node passwords, verify status and behavior without printing request bodies.
+   - Under public-safe/internal-lab, avoid secrets in CLI argv, shell history, logs, screenshots, HAR files, plans, commits, and final answers.
+   - Under public-safe/internal-lab, when browser/API payloads legitimately include node passwords, verify status and behavior without printing request bodies.
+   - In internal-lab work, prefer existing browser sessions, kubeconfig paths, ignored env files, and private inventory over extra token-fetch-and-inject scripts. Use API token injection only when it is already the local convention or the auth behavior is under test.
+   - Under a user-approved trusted-lab-unredacted profile, do not spend extra cycles redacting local evidence that will remain private.
 
 3. **Restore or prepare the environment for real.**
    - Restore all nodes that belong to the target cluster unit when a restore is required.
@@ -84,7 +87,7 @@ If any secret or endpoint is missing, do not invent it and do not ask the user t
 - Duplicate import of the same endpoint must be rejected before creating duplicate member-cluster state.
 - Agent image provenance must be verified before member import/add-node: registry, tag, digest, architecture, and offline package presence.
 - If OS package initialization fails on an offline clean node, prefer the bundled repository/ISO path documented by the project before using network repos.
-- Browser/API flows may carry node passwords in internal-network deployments, but the agent must redact all evidence and avoid persistent request-body capture.
+- Browser/API flows may carry node passwords in internal-network deployments. Redact evidence and avoid persistent request-body capture under public-safe/internal-lab; trusted-lab-unredacted may keep raw evidence when the user explicitly allows it.
 
 ## Evidence Template
 
@@ -111,5 +114,7 @@ Verification:
 - AC-002: <live/API/UI/E2E evidence>
 
 Secrets review:
-- No endpoints/AK/SK/passwords/kubeconfigs/HAR request bodies committed or printed.
+- Profile: <public-safe/internal-lab/trusted-lab-unredacted>
+- Under public-safe/internal-lab: no endpoints/AK/SK/passwords/kubeconfigs/HAR request bodies committed or printed.
+- Under trusted-lab-unredacted: raw values stayed inside the approved private lab context.
 ```

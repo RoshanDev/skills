@@ -21,7 +21,7 @@ Both appear as cards under `容器组件 / 系统组件` (Container Components /
 - **Unique initiator names**: `/etc/iscsi/initiatorname.iscsi` `InitiatorName` must be unique across worker nodes (duplicate IQN causes driver pod CrashLoop)
 - **Real XSKY pool, share, and access token**: data-plane testing creates resources on the storage backend
 
-**Security**: XMS tokens, SSH passwords, and Harbor passwords must not be logged in docs, screenshots, or committed files. Use `codex-xsky-*` prefix for all test resources.
+**Security**: Under public-safe/internal-lab, XMS tokens, SSH passwords, and Harbor passwords must not be logged in docs, screenshots, or committed files. Under explicit trusted-lab-unredacted approval, private lab evidence may keep raw values. Use `codex-xsky-*` prefix for all test resources.
 
 ## Install
 
@@ -329,7 +329,7 @@ kubectl get sc,volumesnapshotclass | grep -E 'codex-xsky|com.nfs.csi.xsky|iscsi.
 
 - XSKY CSI requires XMS access token stored in a Kubernetes Secret (`data.token`)
 - The StorageClass references the Secret via `csi.storage.k8s.io/provisioner-secret-name/namespace`
-- **Do not** paste raw tokens in docs, screenshots, logs, or HAR request bodies
+- Under public-safe/internal-lab, do not paste raw tokens in docs, screenshots, logs, or HAR request bodies. Under explicit trusted-lab-unredacted approval, private lab evidence may keep raw tokens.
 - The UI should use a credential/SecretRef selector, not a raw token input field
 - When creating credentials: token input only in a controlled dialog with masked input; submit creates/updates the Secret, then the StorageClass form only references the Secret name
 

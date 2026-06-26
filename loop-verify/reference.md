@@ -142,12 +142,17 @@ Final PASS is not allowed if a required fix survives only in shell history, a te
 Use this when browser/API/internal-network flows include passwords, tokens, access keys, kubeconfigs, registry credentials, or SSH credentials.
 
 ```text
+□ Evidence profile selected: public-safe / internal-lab / trusted-lab-unredacted
+□ For internal-lab, secrets came from approved local private sources: ignored env file, secret store, kubeconfig path, existing browser profile, Playwright storage state, cookie/session file, or private project doc
+□ For internal-lab, the agent used real login/session state when practical instead of building extra API-token injection scripts
+□ For trusted-lab-unredacted, user/project context explicitly allows raw values in private local evidence, final chat answers, screenshots, logs, HARs, or private commits
 □ The product contract actually requires the secret in the payload, or the secret was moved to a safer mechanism
-□ Request bodies containing secrets were not printed, screenshot, HAR-captured, committed, or copied into notes/finals
-□ Shell commands did not pass secrets as visible argv flags
-□ Evidence uses redacted summaries, status codes, resource names, or Secret existence checks instead of raw secret values
-□ Logs and telemetry added by the change do not persist secrets
-□ Public repos and skills contain placeholders, not lab endpoints, account names, access keys, secret keys, passwords, kubeconfigs, or tokens
+□ Under public-safe/internal-lab, request bodies containing secrets were not printed, screenshot, HAR-captured, committed, or copied into notes/finals
+□ Under public-safe/internal-lab, shell commands did not pass secrets as visible argv flags, except narrowly scoped internal-lab browser form entry when the tool has no stdin/session alternative and the raw value is not persisted or reported
+□ Under public-safe/internal-lab, evidence uses redacted summaries, status codes, resource names, or Secret existence checks instead of raw secret values
+□ Under trusted-lab-unredacted, raw values may be preserved in the trusted lab context when useful; do not spend extra effort redacting evidence unless it will leave that context
+□ Logs and telemetry added by the change do not persist secrets outside the selected profile's allowed context
+□ Public repos and public skills contain placeholders, not lab endpoints, account names, access keys, secret keys, passwords, kubeconfigs, or tokens
 ```
 
 ---

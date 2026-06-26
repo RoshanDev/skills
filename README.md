@@ -115,7 +115,7 @@ python3 golang-ddd/scripts/check_domain_imports.py golang-ddd/examples/order
 
 ### zstack-gsstack-ops
 
-The public skill is intentionally sanitized. Keep lab endpoints, private IDs, credentials, and private environment details in ignored local files or project-private documentation only.
+The public skill is intentionally sanitized. Keep lab endpoints, private IDs, credentials, and private environment details in ignored local files or project-private documentation by default. For internal lab execution, those private local sources are valid inputs. If the user explicitly selects `trusted-lab-unredacted`, private notes, private repo commits, screenshots, HAR request bodies, command output, and final chat answers may keep raw values while staying inside that trusted context.
 
 ```bash
 mkdir -p ~/.agents/skills ~/.codex/skills
@@ -135,7 +135,7 @@ ln -sfn /path/to/skills/ssh-reuse ~/.codex/skills/ssh-reuse
 
 ### container-e2e-browser / container-e2e-full
 
-Both skills are sanitized: image registries use `harbor.example.com` placeholders. Keep the real registry, frontend URL, admin credentials, and kubeconfig in ignored local env files (see `gsstack-local-dev` skill convention).
+Both skills are sanitized: image registries use `harbor.example.com` placeholders. Keep the real registry, frontend URL, admin credentials, cookie/session files, browser profiles, storage state, and kubeconfig in ignored local env files or project-private docs by default (see `gsstack-local-dev` skill convention). In internal labs, agents should use those local private sources and real browser sessions directly instead of inventing API token injection paths. With explicit `trusted-lab-unredacted` approval, private evidence and final chat answers may include the raw values.
 
 Install the whole skill directory, not only `SKILL.md`. Each skill links to supporting files for progressive disclosure:
 

@@ -40,6 +40,17 @@ Run this gate if any of these are true:
 
 If the failure was reported from UI but this gate cannot run because login/session/environment is missing, final status is PARTIAL or BLOCKED, not PASS.
 
+## Internal-Lab Credential Path
+
+When the selected Evidence Profile is `internal-lab` or `trusted-lab-unredacted`, do not treat local credentials as unavailable just because they cannot be printed. Prefer these session sources, in order:
+
+1. Existing Chrome profile already logged into the target environment.
+2. Playwright/Cypress storage state or cookie/session file kept in an ignored local path.
+3. Ignored local env file or approved secret store with test account credentials.
+4. Manual login in the controlled browser when automation would cost more than it saves.
+
+`internal-lab` allows the agent to use real accounts, cookies, sessions, kubeconfigs, and test credentials for E2E setup inside the private lab, while still redacting copied evidence. `trusted-lab-unredacted` additionally allows raw values in private local evidence, screenshots, HAR request bodies, durable task notes, private commits, and final chat answers when the user explicitly says that is acceptable. Avoid writing Python/API token-fetch-and-inject helpers unless they are already the repo convention or the auth mechanism itself is under test.
+
 ---
 
 ## Goal Contract Add-on
